@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Audiour</string>
+    <string name="title_section1">Audiour Home</string>
+    <string name="title_section2">Settings</string>
+    <string name="title_section3">About</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="title_settings">Settings</string>
+
+    <string name="action_cast">Cast</string>
+    <string name="action_settings">Settings</string>
+
+
+    <!-- Preferences -->
+    <string name="pref_username">Username</string>
+    <string name="pref_username_summary">Your Audiour Username</string>
+
+
+</resources>

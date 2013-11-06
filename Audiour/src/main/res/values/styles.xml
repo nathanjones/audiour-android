@@ -1,0 +1,13 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="Audiour" parent="android:Theme.Holo.Light.DarkActionBar">
+        <item name="android:actionBarStyle">@style/Audiour.ActionBar</item>
+    </style>
+
+    <!-- ActionBar styles -->
+    <style name="Audiour.ActionBar" parent="android:Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">#605f59</item>
+    </style>
+
+</resources>
