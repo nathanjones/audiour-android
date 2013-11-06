@@ -6,8 +6,20 @@
     android:layout_height="match_parent">
 
     <EditTextPreference
-        android:key="pref_app_name"
+        android:key="pref_username"
         android:title="@string/pref_username"
         android:summary="@string/pref_username_summary" />
+
+    <EditTextPreference
+        android:key="pref_default_url"
+        android:title="@string/pref_default_url"
+        android:summary="@string/pref_default_url_summary"
+        android:defaultValue="@string/audiour_url_default" />
+
+    <EditTextPreference
+        android:key="pref_app_name"
+        android:title="@string/pref_app_name"
+        android:summary="@string/pref_app_name_summary"
+        android:defaultValue="@string/nrj_cast_app" />
 
 </PreferenceScreen>
