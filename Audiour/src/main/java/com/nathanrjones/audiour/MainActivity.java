@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
@@ -16,6 +17,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.cast.ApplicationChannel;
@@ -23,6 +26,7 @@ import com.google.cast.ApplicationMetadata;
 import com.google.cast.ApplicationSession;
 import com.google.cast.CastContext;
 import com.google.cast.CastDevice;
+import com.google.cast.ContentMetadata;
 import com.google.cast.MediaProtocolMessageStream;
 import com.google.cast.MediaRouteAdapter;
 import com.google.cast.MediaRouteHelper;
@@ -48,6 +52,13 @@ public class MainActivity extends FragmentActivity
     private MediaRouter.Callback mMediaRouterCallback;
     private CastDevice mSelectedDevice;
     private MediaRouteStateChangeListener mRouteStateListener;
+
+    private ContentMetadata mAudiourMeta;
+
+    private Button mLoadButton;
+    private Button mPlayButton;
+    private Button mPauseButton;
+    private Button mStopButton;
 
     private ApplicationSession mSession;
     private MediaProtocolMessageStream mMediaMessageStream;
@@ -79,6 +90,9 @@ public class MainActivity extends FragmentActivity
         mMediaRouteSelector = MediaRouteHelper.buildMediaRouteSelector( MediaRouteHelper.CATEGORY_CAST );
         mMediaRouterCallback = new MediaRouterCallback();
 
+        mAudiourMeta = new ContentMetadata();
+        mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
+        mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
     }
 
     @Override
@@ -88,6 +102,39 @@ public class MainActivity extends FragmentActivity
         mActivity = this;
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+
+        mLoadButton = (Button) findViewById(R.id.load_button);
+        mPlayButton = (Button) findViewById(R.id.play_button);
+        mPauseButton = (Button) findViewById(R.id.pause_button);
+        mStopButton = (Button) findViewById(R.id.stop_button);
+
+        mLoadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onLoadClicked();
+            }
+        });
+
+        mPlayButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onPlayClicked();
+            }
+        });
+
+        mPauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onPauseClicked();
+            }
+        });
+
+        mStopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onStopClicked();
+            }
+        });
 
     }
 
@@ -192,6 +239,47 @@ public class MainActivity extends FragmentActivity
         return super.onOptionsItemSelected(item);
     }
 
+
+    public void onLoadClicked() {
+        try {
+            if (mMediaMessageStream != null) {
+
+                EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
+                String audiourUrl = urlEditText.getText().toString();
+
+                mMediaMessageStream.loadMedia(audiourUrl, mAudiourMeta, true);
+            }
+        } catch (IOException e) {
+        }
+    }
+
+    public void onPlayClicked() {
+        try {
+            if (mMediaMessageStream != null) {
+                mMediaMessageStream.resume();
+            }
+        } catch (IOException e) {
+        }
+    }
+
+    public void onPauseClicked() {
+        try {
+            if (mMediaMessageStream != null) {
+                mMediaMessageStream.stop();
+            }
+        } catch (IOException e) {
+        }
+    }
+
+    public void onStopClicked() {
+        try {
+            if (mMediaMessageStream != null) {
+                mMediaMessageStream.loadMedia("", mAudiourMeta);
+            }
+        } catch (IOException e) {
+        }
+    }
+
     private class MediaRouterCallback extends MediaRouter.Callback {
         @Override
         public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo route) {
@@ -239,6 +327,15 @@ public class MainActivity extends FragmentActivity
 
                 mMediaMessageStream = new MediaProtocolMessageStream();
                 channel.attachMessageStream(mMediaMessageStream);
+
+                EditText editText = (EditText) findViewById(R.id.audiour_url);
+                String audiourUrl = editText.getText().toString();
+
+                try {
+                    mMediaMessageStream.loadMedia(audiourUrl, mAudiourMeta, true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -268,9 +365,7 @@ public class MainActivity extends FragmentActivity
                 mRouteStateListener.onVolumeChanged(volume);
             }
         } catch (IllegalStateException e){
-            Toast.makeText(mActivity, "Problem Setting Volume", Toast.LENGTH_SHORT).show();
         } catch (IOException e){
-            Toast.makeText(mActivity, "Problem Setting Volume", Toast.LENGTH_SHORT).show();
         }
     }
 
