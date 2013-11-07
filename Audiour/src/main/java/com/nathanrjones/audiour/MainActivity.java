@@ -66,8 +66,10 @@ public class MainActivity extends FragmentActivity
     private static final String APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
     private static final int POSITION_MAIN = 0;
-    private static final int POSITION_SETTINGS = 1;
-    private static final int POSITION_ABOUT = 2;
+    private static final int POSITION_TRENDING = 1;
+    private static final int POSITION_RANDOM = 2;
+    private static final int POSITION_SETTINGS = 3;
+    private static final int POSITION_ABOUT = 4;
 
 
     @Override
@@ -167,6 +169,12 @@ public class MainActivity extends FragmentActivity
             case POSITION_MAIN:
                 fragment = new MainFragment();
                 break;
+            case POSITION_TRENDING:
+                fragment = new TrendingFragment();
+                break;
+            case POSITION_RANDOM:
+                fragment = new BrowseRandomFragment();
+                break;
             case POSITION_ABOUT:
                 fragment = new AboutFragment();
                 break;
@@ -184,13 +192,19 @@ public class MainActivity extends FragmentActivity
     public void onSectionAttached(int number) {
         switch (number) {
             case POSITION_MAIN:
-                mTitle = getString(R.string.title_section1);
+                mTitle = getString(R.string.title_home);
+                break;
+            case POSITION_TRENDING:
+                mTitle = getString(R.string.title_trending);
+                break;
+            case POSITION_RANDOM:
+                mTitle = getString(R.string.title_random);
                 break;
             case POSITION_SETTINGS:
-                mTitle = getString(R.string.title_section2);
+                mTitle = getString(R.string.title_settings);
                 break;
             case POSITION_ABOUT:
-                mTitle = getString(R.string.title_section3);
+                mTitle = getString(R.string.title_about);
                 break;
         }
     }
@@ -401,6 +415,34 @@ public class MainActivity extends FragmentActivity
         public void onAttach(Activity activity) {
             super.onAttach(activity);
             ((MainActivity) activity).onSectionAttached(POSITION_ABOUT);
+        }
+    }
+
+    public static class BrowseRandomFragment extends Fragment {
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_placeholder, container, false);
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(POSITION_RANDOM);
+        }
+    }
+
+    public static class TrendingFragment extends Fragment {
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            return inflater.inflate(R.layout.fragment_placeholder, container, false);
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(POSITION_TRENDING);
         }
     }
 
