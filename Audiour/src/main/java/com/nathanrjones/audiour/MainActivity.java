@@ -5,8 +5,10 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.MediaRouteButton;
@@ -17,8 +19,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import com.google.cast.ApplicationChannel;
@@ -34,6 +41,8 @@ import com.google.cast.MediaRouteStateChangeListener;
 import com.google.cast.SessionError;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
@@ -156,25 +165,27 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        if (position == POSITION_SETTINGS){ // Settings
-            Intent intent = new Intent();
-            intent.setClass(MainActivity.this, SettingsActivity.class);
-            startActivityForResult(intent, 0);
-            return;
-        }
-
         Fragment fragment;
+        Intent intent;
 
         switch (position){
+
             case POSITION_MAIN:
                 fragment = new MainFragment();
                 break;
             case POSITION_TRENDING:
-                fragment = new TrendingFragment();
-                break;
+                intent = new Intent();
+                intent.setClass(MainActivity.this, BrowsePopularActivity.class);
+                startActivityForResult(intent, 0);
+                return;
             case POSITION_RANDOM:
                 fragment = new BrowseRandomFragment();
                 break;
+            case POSITION_SETTINGS:
+                intent = new Intent();
+                intent.setClass(MainActivity.this, SettingsActivity.class);
+                startActivityForResult(intent, 0);
+                return;
             case POSITION_ABOUT:
                 fragment = new AboutFragment();
                 break;
@@ -418,10 +429,49 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    public static class BrowseRandomFragment extends Fragment {
+    public class BrowseRandomFragment extends Fragment {
+
+        ArrayList randomFilesList = new ArrayList<HashMap<String, String>>();
+        ListView listView;
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            HashMap<String, String> file = new HashMap<String, String>();
+
+            file.put("title", "Borderlands 2");
+            file.put("url", "http://audiour.com/frglqrgg");
+
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+
+            listView = (ListView)findViewById(android.R.id.list);
+
+            ListAdapter adapter = new SimpleAdapter(mActivity, randomFilesList,
+                    R.layout.audiour_simple_list_item,
+                    new String[] { "title", "url" },
+                    new int[] { R.id.title,R.id.url }
+            );
+
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    Toast.makeText(mActivity, "You Clicked " + position , Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+   }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
             return inflater.inflate(R.layout.fragment_placeholder, container, false);
         }
 
