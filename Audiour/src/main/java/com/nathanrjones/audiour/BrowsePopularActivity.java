@@ -91,9 +91,9 @@ public class BrowsePopularActivity extends ListActivity {
 
                 final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
 
-                final ListAdapter listAdapter = new ArrayAdapter<AudiourMedia>(
+                final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                         BrowsePopularActivity.this,
-                        android.R.layout.simple_list_item_1,
+                        R.layout.card_list_item,
                         mPopularList
                 );
 
