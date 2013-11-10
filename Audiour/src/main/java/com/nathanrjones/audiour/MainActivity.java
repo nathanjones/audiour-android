@@ -72,7 +72,9 @@ public class MainActivity extends FragmentActivity
     private ApplicationSession mSession;
     private MediaProtocolMessageStream mMediaMessageStream;
 
-    private static final String APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
+    private String mAppName;
+
+    private static final String NRJ_APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
     private static final int POSITION_MAIN = 0;
     private static final int POSITION_TRENDING = 1;
@@ -147,6 +149,15 @@ public class MainActivity extends FragmentActivity
             }
         });
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity);
+        mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
+
+        String url = getIntent().getStringExtra("url");
+
+        if (url != null && !url.equals("")) {
+            EditText input = (EditText) findViewById(R.id.audiour_url);
+            input.setText(url);
+        }
     }
 
     @Override
@@ -356,6 +367,7 @@ public class MainActivity extends FragmentActivity
                 EditText editText = (EditText) findViewById(R.id.audiour_url);
                 String audiourUrl = editText.getText().toString();
 
+
                 try {
                     mMediaMessageStream.loadMedia(audiourUrl, mAudiourMeta, true);
                 } catch (IOException e) {
@@ -376,7 +388,7 @@ public class MainActivity extends FragmentActivity
 
         try {
             Toast.makeText(this, "Starting Cast Keys Session", Toast.LENGTH_SHORT).show();
-            mSession.startSession(APP_NAME);
+            mSession.startSession(NRJ_APP_NAME);
         } catch (IOException e) {
             Toast.makeText(this, "Failed to open session", Toast.LENGTH_SHORT).show();
         }

@@ -34,7 +34,7 @@ public class BrowsePopularActivity extends ListActivity {
     // JSON Node names
     private static final String TAG_ID = "AudioFileId";
     private static final String TAG_TITLE = "Title";
-    private static final String TAG_URL = "Url";
+    private static final String TAG_URL = "Mp3Url";
 
     List<AudiourMedia> mPopularList;
 
@@ -105,14 +105,15 @@ public class BrowsePopularActivity extends ListActivity {
 
                         AudiourMedia selected = mPopularList.get(position);
 
-                        Toast.makeText(BrowsePopularActivity.this, selected.getTitle(), Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(BrowsePopularActivity.this, selected.getTitle(), Toast.LENGTH_SHORT).show();
                         Toast.makeText(BrowsePopularActivity.this, selected.getUrl(), Toast.LENGTH_SHORT).show();
 
+                        Intent intent = new Intent();
+                        intent.setClass(BrowsePopularActivity.this, MainActivity.class);
+                        intent.putExtra("url", selected.getUrl());
+                        startActivityForResult(intent, 0);
                     }
                 });
-
-
-
 
             } catch (JSONException e) {
                 e.printStackTrace();
