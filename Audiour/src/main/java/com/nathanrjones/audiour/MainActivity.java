@@ -459,11 +459,16 @@ public class MainActivity extends FragmentActivity
             randomFilesList.add(file);
             randomFilesList.add(file);
             randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
+            randomFilesList.add(file);
 
             listView = (ListView)findViewById(android.R.id.list);
 
             ListAdapter adapter = new SimpleAdapter(mActivity, randomFilesList,
-                    R.layout.audiour_simple_list_item,
+                    R.layout.card_list_item,
                     new String[] { "title", "url" },
                     new int[] { R.id.title,R.id.url }
             );
