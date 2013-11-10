@@ -26,7 +26,20 @@
             </intent-filter>
             <intent-filter>
                 <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/"/>
-                <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/keys" />
+                <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/audiour" />
+                <data android:scheme="http" android:host="audiour.com" android:path="/" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.nathanrjones.audiour.BrowsePopularActivity"
+            android:label="@string/title_trending"
+            android:parentActivityName="com.nathanrjones.audiour.MainActivity">
+            <intent-filter>
+                <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/audiour/popular" />
+                <data android:scheme="http" android:host="audiour.com" android:path="/popular" />
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
@@ -37,7 +50,7 @@
             android:label="@string/title_settings"
             android:parentActivityName="com.nathanrjones.audiour.MainActivity">
             <intent-filter>
-                <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/keys/settings" />
+                <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/audiour/settings" />
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
