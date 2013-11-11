@@ -8,26 +8,25 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
+        android:layout_margin="4dp"
         android:background="@drawable/card_background">
 
         <TextView
             android:id="@+id/title"
-            android:textColor="#666"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textStyle="normal" />
+            android:fontFamily="sans-serif-light"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#777"/>
 
         <TextView
-            android:visibility="gone"
             android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/primary_text_light" />
+            android:fontFamily="sans-serif-light"
+            android:textStyle="italic"
+            android:textColor="#AAA" />
 
     </LinearLayout>
 

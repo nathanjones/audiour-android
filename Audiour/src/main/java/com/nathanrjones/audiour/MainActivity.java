@@ -7,6 +7,7 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
@@ -40,9 +41,14 @@ import com.google.cast.MediaRouteHelper;
 import com.google.cast.MediaRouteStateChangeListener;
 import com.google.cast.SessionError;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
@@ -82,6 +88,15 @@ public class MainActivity extends FragmentActivity
     private static final int POSITION_SETTINGS = 3;
     private static final int POSITION_ABOUT = 4;
 
+    private static String url = "http://audiour.com/Popular";
+
+    // JSON Node names
+    private static final String TAG_ID = "AudioFileId";
+    private static final String TAG_TITLE = "Title";
+    private static final String TAG_URL = "Mp3Url";
+
+    List<AudiourMedia> mPopularList;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +121,11 @@ public class MainActivity extends FragmentActivity
         mAudiourMeta = new ContentMetadata();
         mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
         mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
+
+        mPopularList = new ArrayList<AudiourMedia>();
+
+        RetrievePopularFilesTask task = new RetrievePopularFilesTask();
+        task.execute(url);
     }
 
     @Override
@@ -411,6 +431,98 @@ public class MainActivity extends FragmentActivity
 
     }
 
+    private void addFakeRandomFiles(){
+
+        final ArrayList randomFilesList = new ArrayList<AudiourMedia>();
+        AudiourMedia file = new AudiourMedia("123", "Random File Title", "http://audiour.com/random");
+
+        for(int i = 0; i < 10; i++) {
+            randomFilesList.add(file);
+        }
+
+        ListView listView = (ListView)findViewById(android.R.id.list);
+
+        ListAdapter adapter = new AudiourMediaArrayAdapter(
+            MainActivity.this, R.layout.card_list_item, randomFilesList
+        );
+
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                AudiourMedia selected = (AudiourMedia) randomFilesList.get(position);
+
+                Toast.makeText(mActivity, selected.getTitle(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
+
+    private class RetrievePopularFilesTask extends AsyncTask<String, Void, JSONArray> {
+
+        private Exception exception;
+
+        protected JSONArray doInBackground(String... urls) {
+            JSONParser parser = new JSONParser();
+            return parser.getJSONFromUrl(url);
+        }
+
+        protected void onPostExecute(JSONArray results) {
+
+            try {
+                for(int i=0;i<results.length();i++)
+                {
+                    JSONObject file = results.getJSONObject(i);// Used JSON Object from Android
+
+                    //Storing each Json in a string variable
+                    String id = file.getString(TAG_ID);
+                    String title = file.getString(TAG_TITLE);
+                    String url = file.getString(TAG_URL);
+
+                    mPopularList.add(new AudiourMedia(id, title, url));
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Toast.makeText(MainActivity.this, "Trending List Loaded", Toast.LENGTH_SHORT).show();
+
+            final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
+
+            final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this,
+                    R.layout.card_list_item,
+                    mPopularList
+            );
+
+            popularFilesListView.setAdapter(listAdapter);
+
+            popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    AudiourMedia selected = mPopularList.get(position);
+                    String url = selected.getUrl();
+
+                    EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
+                    urlEditText.setText(url);
+
+                    Toast.makeText(MainActivity.this, selected.getTitle(), Toast.LENGTH_SHORT).show();
+
+                    if (mMediaMessageStream != null) {
+                        try {
+                            mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        }
+    }
+
     // Fragments
 
     public static class MainFragment extends Fragment {
@@ -450,40 +562,7 @@ public class MainActivity extends FragmentActivity
         public void onStart() {
             super.onStart();
 
-            HashMap<String, String> file = new HashMap<String, String>();
-
-            file.put("title", "Borderlands 2");
-            file.put("url", "http://audiour.com/frglqrgg");
-
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-            randomFilesList.add(file);
-
-            listView = (ListView)findViewById(android.R.id.list);
-
-            ListAdapter adapter = new SimpleAdapter(mActivity, randomFilesList,
-                    R.layout.card_list_item,
-                    new String[] { "title", "url" },
-                    new int[] { R.id.title,R.id.url }
-            );
-
-            listView.setAdapter(adapter);
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                    Toast.makeText(mActivity, "You Clicked " + position , Toast.LENGTH_SHORT).show();
-
-                }
-            });
-
+            addFakeRandomFiles();
    }
 
         @Override

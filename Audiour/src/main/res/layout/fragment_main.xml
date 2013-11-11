@@ -14,7 +14,7 @@
         android:text="@string/audiour_url_default"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="8dp"
         android:inputType="textUri"
         android:singleLine="true"
         android:textColor="#222" />
@@ -25,7 +25,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:text="Load File" />
 
     <Button
@@ -51,5 +51,29 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:text="Stop" />
+
+    <TextView
+        android:id="@+id/title"
+        android:text="The Top 10"
+        android:layout_below="@+id/play_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8sp"
+        android:layout_marginLeft="8sp"
+        android:layout_marginRight="8sp"
+        android:fontFamily="sans-serif-light"
+        android:textSize="24sp" />
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_below="@+id/title"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:choiceMode="singleChoice"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
 
 </RelativeLayout>
