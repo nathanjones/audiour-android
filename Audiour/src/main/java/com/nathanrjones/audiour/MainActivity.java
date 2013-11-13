@@ -96,7 +96,7 @@ public class MainActivity extends FragmentActivity
     private static final String TAG_URL = "Mp3Url";
 
     List<AudiourMedia> mPopularList;
-
+    AudiourMedia mSelectedMedia;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +110,15 @@ public class MainActivity extends FragmentActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        SlidingUpPanelLayout layout = null;
+
+        layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+
+        if (layout != null){
+            layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
+            layout.setAnchorPoint(0.3f);
+        }
 
         mCastContext = new CastContext( getApplicationContext() );
         MediaRouteHelper.registerMinimalMediaRouteProvider( mCastContext, this );
@@ -205,10 +214,8 @@ public class MainActivity extends FragmentActivity
                 fragment = new MainFragment();
                 break;
             case POSITION_TRENDING:
-                intent = new Intent();
-                intent.setClass(MainActivity.this, BrowsePopularActivity.class);
-                startActivityForResult(intent, 0);
-                return;
+                fragment = new TrendingFragment();
+                break;
             case POSITION_RANDOM:
                 fragment = new BrowseRandomFragment();
                 break;
@@ -451,10 +458,9 @@ public class MainActivity extends FragmentActivity
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                AudiourMedia selected = (AudiourMedia) randomFilesList.get(position);
+                mSelectedMedia = (AudiourMedia) randomFilesList.get(position);
 
-                Toast.makeText(mActivity, selected.getTitle(), Toast.LENGTH_SHORT).show();
-
+                Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -503,13 +509,13 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                    AudiourMedia selected = mPopularList.get(position);
-                    String url = selected.getUrl();
+                    mSelectedMedia = mPopularList.get(position);
+                    String url = mSelectedMedia.getUrl();
 
                     EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
                     urlEditText.setText(url);
 
-                    Toast.makeText(MainActivity.this, selected.getTitle(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
 
                     if (mMediaMessageStream != null) {
                         try {
@@ -529,7 +535,9 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_main, container, false);
+            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+            return rootView;
         }
 
         @Override
@@ -555,9 +563,6 @@ public class MainActivity extends FragmentActivity
 
     public class BrowseRandomFragment extends Fragment {
 
-        ArrayList randomFilesList = new ArrayList<HashMap<String, String>>();
-        ListView listView;
-
         @Override
         public void onStart() {
             super.onStart();
@@ -578,11 +583,32 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    public static class TrendingFragment extends Fragment {
+    public class TrendingFragment extends Fragment {
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            RetrievePopularFilesTask task = new RetrievePopularFilesTask();
+            task.execute(url);
+        }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_placeholder, container, false);
+            View rootView = inflater.inflate(R.layout.fragment_placeholder, container, false);
+
+            SlidingUpPanelLayout layout = null;
+
+            if (rootView != null) {
+                layout = (SlidingUpPanelLayout) rootView.findViewById(R.id.sliding_layout);
+            }
+
+            if (layout != null){
+                layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
+                layout.setAnchorPoint(0.3f);
+            }
+
+            return rootView;
         }
 
         @Override
