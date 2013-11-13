@@ -28,6 +28,7 @@
                 <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/"/>
                 <data android:scheme="http" android:host="cast.nathanrjones.com" android:path="/audiour" />
                 <data android:scheme="http" android:host="audiour.com" android:path="/" />
+                <data android:scheme="http" android:host="audiour.com" android:pathPattern="/.*" />
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>

@@ -133,6 +133,14 @@ public class MainActivity extends FragmentActivity
 
         mPopularList = new ArrayList<AudiourMedia>();
 
+        final Intent intent = getIntent();
+        final String action = intent.getAction();
+
+        if (Intent.ACTION_VIEW.equals(action)){
+            Toast.makeText(MainActivity.this, intent.getDataString(), Toast.LENGTH_LONG).show();
+        }
+
+
         RetrievePopularFilesTask task = new RetrievePopularFilesTask();
         task.execute(url);
     }
@@ -475,8 +483,6 @@ public class MainActivity extends FragmentActivity
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-            Toast.makeText(MainActivity.this, "Trending List Loaded", Toast.LENGTH_SHORT).show();
 
             final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
 
