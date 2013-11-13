@@ -421,33 +421,6 @@ public class MainActivity extends FragmentActivity
 
     }
 
-    private void addFakeRandomFiles(){
-
-        final ArrayList randomFilesList = new ArrayList<AudiourMedia>();
-        AudiourMedia file = new AudiourMedia("123", "Random File Title", "http://audiour.com/random");
-
-        for(int i = 0; i < 10; i++) {
-            randomFilesList.add(file);
-        }
-
-        ListView listView = (ListView)findViewById(android.R.id.list);
-
-        ListAdapter adapter = new AudiourMediaArrayAdapter(
-            MainActivity.this, R.layout.card_list_item, randomFilesList
-        );
-
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                mSelectedMedia = (AudiourMedia) randomFilesList.get(position);
-
-                Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     private class RetrievePopularFilesTask extends AsyncTask<String, Void, JSONArray> {
 
         private Exception exception;
@@ -514,36 +487,44 @@ public class MainActivity extends FragmentActivity
 
     // Fragments
 
-    public class BrowseRandomFragment extends Fragment {
-
-        @Override
-        public void onStart() {
-            super.onStart();
-
-            addFakeRandomFiles();
-   }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-            return inflater.inflate(R.layout.fragment_placeholder, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_RANDOM);
-        }
-    }
-
     public class TrendingFragment extends Fragment {
 
         @Override
         public void onStart() {
             super.onStart();
 
-            RetrievePopularFilesTask task = new RetrievePopularFilesTask();
-            task.execute(url);
+            final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
+
+            final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this,
+                    R.layout.card_list_item,
+                    mPopularList
+            );
+
+            popularFilesListView.setAdapter(listAdapter);
+
+            popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                    mSelectedMedia = mPopularList.get(position);
+                    String url = mSelectedMedia.getUrl();
+
+                    EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
+                    urlEditText.setText(url);
+
+                    Toast.makeText(MainActivity.this, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
+
+                    if (mMediaMessageStream != null) {
+                        try {
+                            mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+
         }
 
         @Override
@@ -573,15 +554,37 @@ public class MainActivity extends FragmentActivity
 
     public class RecentUploadsFragment extends Fragment {
 
+        private ArrayList<AudiourMedia> mRecentUploads = new ArrayList<AudiourMedia>();
+
         @Override
         public void onStart() {
             super.onStart();
 
-            addFakeRandomFiles();
+            ListView listView = (ListView)findViewById(android.R.id.list);
+
+            ListAdapter adapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this, R.layout.card_list_item, mRecentUploads
+            );
+
+            if (listView != null){
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        mSelectedMedia = mRecentUploads.get(position);
+                        Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+            for(int i = 1; i <= 10; i++) {
+                mRecentUploads.add(new AudiourMedia("123", "Recent Upload #" + i, "http://audiour.com/recent"));
+            }
 
             return inflater.inflate(R.layout.fragment_placeholder, container, false);
         }
@@ -590,6 +593,50 @@ public class MainActivity extends FragmentActivity
         public void onAttach(Activity activity) {
             super.onAttach(activity);
             ((MainActivity) activity).onSectionAttached(POSITION_RECENTS);
+        }
+    }
+
+    public class BrowseRandomFragment extends Fragment {
+
+        private ArrayList<AudiourMedia> mRandomUploads = new ArrayList<AudiourMedia>();;
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            ListView listView = (ListView)findViewById(android.R.id.list);
+
+            ListAdapter adapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this, R.layout.card_list_item, mRandomUploads
+            );
+
+            if (listView != null){
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        mSelectedMedia = mRandomUploads.get(position);
+                        Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+            for(int i = 1; i <= 10; i++) {
+                mRandomUploads.add(new AudiourMedia("123", "Random File #" + i, "http://audiour.com/random"));
+            }
+
+            return inflater.inflate(R.layout.fragment_placeholder, container, false);
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(POSITION_RANDOM);
         }
     }
 
