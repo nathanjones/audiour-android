@@ -95,7 +95,7 @@ public class MainActivity extends FragmentActivity
     private static final String TAG_TITLE = "Title";
     private static final String TAG_URL = "Mp3Url";
 
-    List<AudiourMedia> mPopularList;
+    List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
     AudiourMedia mSelectedMedia;
 
     @Override
@@ -130,8 +130,6 @@ public class MainActivity extends FragmentActivity
         mAudiourMeta = new ContentMetadata();
         mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
         mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
-
-        mPopularList = new ArrayList<AudiourMedia>();
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -213,22 +211,25 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        Fragment fragment = null;
-        Intent intent;
+        List<AudiourMedia> audiourMediaList = new ArrayList<AudiourMedia>();
 
         switch (position){
             case POSITION_TRENDING:
-                fragment = new TrendingFragment();
+                audiourMediaList = mPopularList;
                 break;
             case POSITION_RANDOM:
-                fragment = new BrowseRandomFragment();
+                for(int i = 1; i <= 10; i++) {
+                    audiourMediaList.add(new AudiourMedia("123", "Random Upload #" + i, "http://audiour.com/random"));
+                }
                 break;
             case POSITION_RECENTS:
-                fragment = new RecentUploadsFragment();
+                for(int i = 1; i <= 10; i++) {
+                    audiourMediaList.add(new AudiourMedia("123", "Recent Upload #" + i, "http://audiour.com/recent"));
+                }
                 break;
         }
 
-        if (fragment == null) return;
+        Fragment fragment = new AudiourMediaListFragment(audiourMediaList, android.R.id.list, position);
 
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
@@ -505,26 +506,36 @@ public class MainActivity extends FragmentActivity
 
     // Fragments
 
-    public class TrendingFragment extends Fragment {
+    public class AudiourMediaListFragment extends Fragment {
+
+        private List<AudiourMedia> mAudiourMediaList = new ArrayList<AudiourMedia>();
+        private ListView mListView;
+        private int mListViewId;
+        private int mMenuPosition;
+
+        public AudiourMediaListFragment(List<AudiourMedia> mediaList, int listViewId, int menuPosition) {
+            mAudiourMediaList = mediaList;
+            mListViewId = listViewId;
+            mMenuPosition = menuPosition;
+        }
 
         @Override
         public void onStart() {
             super.onStart();
 
-            final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
-
-            final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
+            ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
                     R.layout.card_list_item,
-                    mPopularList
+                    mAudiourMediaList
             );
 
-            popularFilesListView.setAdapter(listAdapter);
+            ListView popularFilesListView = (ListView) findViewById(mListViewId);
 
+            popularFilesListView.setAdapter(listAdapter);
             popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    onMediaSelected(mPopularList.get(position));
+                    onMediaSelected(mAudiourMediaList.get(position));
                 }
             });
 
@@ -551,94 +562,9 @@ public class MainActivity extends FragmentActivity
         @Override
         public void onAttach(Activity activity) {
             super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_TRENDING);
+            ((MainActivity) activity).onSectionAttached(mMenuPosition);
         }
     }
 
-    public class RecentUploadsFragment extends Fragment {
-
-        private ArrayList<AudiourMedia> mRecentUploads = new ArrayList<AudiourMedia>();
-
-        @Override
-        public void onStart() {
-            super.onStart();
-
-            ListView listView = (ListView)findViewById(android.R.id.list);
-
-            ListAdapter adapter = new AudiourMediaArrayAdapter(
-                    MainActivity.this, R.layout.card_list_item, mRecentUploads
-            );
-
-            if (listView != null){
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        onMediaSelected(mRecentUploads.get(position));
-                    }
-                });
-            }
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-            for(int i = 1; i <= 10; i++) {
-                mRecentUploads.add(new AudiourMedia("123", "Recent Upload #" + i, "http://audiour.com/recent"));
-            }
-
-            return inflater.inflate(R.layout.fragment_placeholder, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_RECENTS);
-        }
-    }
-
-    public class BrowseRandomFragment extends Fragment {
-
-        private ArrayList<AudiourMedia> mRandomUploads = new ArrayList<AudiourMedia>();;
-
-        @Override
-        public void onStart() {
-            super.onStart();
-
-            ListView listView = (ListView)findViewById(android.R.id.list);
-
-            ListAdapter adapter = new AudiourMediaArrayAdapter(
-                    MainActivity.this, R.layout.card_list_item, mRandomUploads
-            );
-
-            if (listView != null){
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        onMediaSelected(mRandomUploads.get(position));
-                    }
-                });
-            }
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-            for(int i = 1; i <= 10; i++) {
-                mRandomUploads.add(new AudiourMedia("123", "Random File #" + i, "http://audiour.com/random"));
-            }
-
-            return inflater.inflate(R.layout.fragment_placeholder, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_RANDOM);
-        }
-    }
 
 }
