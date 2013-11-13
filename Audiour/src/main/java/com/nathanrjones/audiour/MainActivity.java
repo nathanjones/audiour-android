@@ -82,11 +82,9 @@ public class MainActivity extends FragmentActivity
 
     private static final String NRJ_APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
-    private static final int POSITION_MAIN = 0;
-    private static final int POSITION_TRENDING = 1;
-    private static final int POSITION_RANDOM = 2;
-    private static final int POSITION_SETTINGS = 3;
-    private static final int POSITION_ABOUT = 4;
+    private static final int POSITION_TRENDING = 0;
+    private static final int POSITION_RANDOM = 1;
+    private static final int POSITION_RECENTS = 2;
 
     private static String url = "http://audiour.com/Popular";
 
@@ -205,31 +203,22 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        Fragment fragment;
+        Fragment fragment = null;
         Intent intent;
 
         switch (position){
-
-            case POSITION_MAIN:
-                fragment = new MainFragment();
-                break;
             case POSITION_TRENDING:
                 fragment = new TrendingFragment();
                 break;
             case POSITION_RANDOM:
                 fragment = new BrowseRandomFragment();
                 break;
-            case POSITION_SETTINGS:
-                intent = new Intent();
-                intent.setClass(MainActivity.this, SettingsActivity.class);
-                startActivityForResult(intent, 0);
-                return;
-            case POSITION_ABOUT:
-                fragment = new AboutFragment();
+            case POSITION_RECENTS:
+                fragment = new RecentUploadsFragment();
                 break;
-            default:
-                fragment = new MainFragment();
         }
+
+        if (fragment == null) return;
 
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
@@ -240,20 +229,14 @@ public class MainActivity extends FragmentActivity
 
     public void onSectionAttached(int number) {
         switch (number) {
-            case POSITION_MAIN:
-                mTitle = getString(R.string.title_home);
-                break;
             case POSITION_TRENDING:
                 mTitle = getString(R.string.title_trending);
                 break;
             case POSITION_RANDOM:
                 mTitle = getString(R.string.title_random);
                 break;
-            case POSITION_SETTINGS:
-                mTitle = getString(R.string.title_settings);
-                break;
-            case POSITION_ABOUT:
-                mTitle = getString(R.string.title_about);
+            case POSITION_RECENTS:
+                mTitle = getString(R.string.title_recents);
                 break;
         }
     }
@@ -531,36 +514,6 @@ public class MainActivity extends FragmentActivity
 
     // Fragments
 
-    public static class MainFragment extends Fragment {
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-            return rootView;
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_MAIN);
-        }
-    }
-
-    public static class AboutFragment extends Fragment {
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_about, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(POSITION_ABOUT);
-        }
-    }
-
     public class BrowseRandomFragment extends Fragment {
 
         @Override
@@ -615,6 +568,28 @@ public class MainActivity extends FragmentActivity
         public void onAttach(Activity activity) {
             super.onAttach(activity);
             ((MainActivity) activity).onSectionAttached(POSITION_TRENDING);
+        }
+    }
+
+    public class RecentUploadsFragment extends Fragment {
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            addFakeRandomFiles();
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+            return inflater.inflate(R.layout.fragment_placeholder, container, false);
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            ((MainActivity) activity).onSectionAttached(POSITION_RECENTS);
         }
     }
 
