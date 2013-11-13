@@ -24,9 +24,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.cast.ApplicationChannel;
@@ -326,6 +328,31 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    public void onMediaSelected(AudiourMedia selected){
+        mSelectedMedia = selected;
+
+        String url = mSelectedMedia.getUrl();
+        String title = mSelectedMedia.getTitle();
+
+        EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
+        urlEditText.setText(url);
+
+        TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
+        selectedMediaText.setText(title);
+
+        LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
+        layout.setVisibility(View.VISIBLE);
+
+        if (mMediaMessageStream != null) {
+            try {
+                mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     private class MediaRouterCallback extends MediaRouter.Callback {
         @Override
         public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo route) {
@@ -464,22 +491,7 @@ public class MainActivity extends FragmentActivity
             popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                    mSelectedMedia = mPopularList.get(position);
-                    String url = mSelectedMedia.getUrl();
-
-                    EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
-                    urlEditText.setText(url);
-
-                    Toast.makeText(MainActivity.this, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
-
-                    if (mMediaMessageStream != null) {
-                        try {
-                            mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    onMediaSelected(mPopularList.get(position));
                 }
             });
         }
@@ -506,22 +518,7 @@ public class MainActivity extends FragmentActivity
             popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                    mSelectedMedia = mPopularList.get(position);
-                    String url = mSelectedMedia.getUrl();
-
-                    EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
-                    urlEditText.setText(url);
-
-                    Toast.makeText(MainActivity.this, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
-
-                    if (mMediaMessageStream != null) {
-                        try {
-                            mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                    onMediaSelected(mPopularList.get(position));
                 }
             });
 
@@ -572,8 +569,7 @@ public class MainActivity extends FragmentActivity
 
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        mSelectedMedia = mRecentUploads.get(position);
-                        Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
+                        onMediaSelected(mRecentUploads.get(position));
                     }
                 });
             }
@@ -616,8 +612,7 @@ public class MainActivity extends FragmentActivity
 
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        mSelectedMedia = mRandomUploads.get(position);
-                        Toast.makeText(mActivity, mSelectedMedia.getTitle(), Toast.LENGTH_SHORT).show();
+                        onMediaSelected(mRandomUploads.get(position));
                     }
                 });
             }
