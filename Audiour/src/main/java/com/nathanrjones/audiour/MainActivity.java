@@ -6,6 +6,8 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -77,6 +79,8 @@ public class MainActivity extends FragmentActivity
     private Button mPauseButton;
     private Button mStopButton;
 
+    private MediaPlayer mMediaPlayer;
+
     private ApplicationSession mSession;
     private MediaProtocolMessageStream mMediaMessageStream;
 
@@ -140,7 +144,10 @@ public class MainActivity extends FragmentActivity
         final String action = intent.getAction();
 
         if (Intent.ACTION_VIEW.equals(action)){
-            Toast.makeText(MainActivity.this, intent.getDataString(), Toast.LENGTH_LONG).show();
+            Uri data = intent.getData();
+            String id = data.getPathSegments().get(0);
+
+            onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
         }
 
     }
@@ -355,9 +362,35 @@ public class MainActivity extends FragmentActivity
         if (mMediaMessageStream != null) {
             try {
                 mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
+
+                mMediaPlayer.release();
+                mMediaPlayer = null;
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        } else {
+            Toast.makeText(MainActivity.this, "Loading File", Toast.LENGTH_SHORT).show();
+
+            mMediaPlayer = new MediaPlayer();
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+            try {
+                mMediaPlayer.setDataSource(url);
+            } catch (IOException e) {
+                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+
+            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer player) {
+                    Toast.makeText(MainActivity.this, "Playing File", Toast.LENGTH_SHORT).show();
+                    player.start();
+                }
+            });
+
+            mMediaPlayer.prepareAsync();
         }
 
     }
