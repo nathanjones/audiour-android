@@ -88,14 +88,19 @@ public class MainActivity extends FragmentActivity
     private static final int POSITION_RANDOM = 1;
     private static final int POSITION_RECENTS = 2;
 
-    private static String url = "http://audiour.com/Popular";
-
     // JSON Node names
     private static final String TAG_ID = "AudioFileId";
     private static final String TAG_TITLE = "Title";
     private static final String TAG_URL = "Mp3Url";
 
     List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
+    List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
+    List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
+
+    private static final String URL_POPULAR = "http://audiour.com/Popular";
+    private static final String URL_RANDOM = "http://audiour.com/Random";
+    private static final String URL_RECENT = "http://audiour.com/RecentlyUploaded";
+
     AudiourMedia mSelectedMedia;
 
     @Override
@@ -138,9 +143,6 @@ public class MainActivity extends FragmentActivity
             Toast.makeText(MainActivity.this, intent.getDataString(), Toast.LENGTH_LONG).show();
         }
 
-
-        RetrievePopularFilesTask task = new RetrievePopularFilesTask();
-        task.execute(url);
     }
 
     @Override
@@ -218,14 +220,10 @@ public class MainActivity extends FragmentActivity
                 audiourMediaList = mPopularList;
                 break;
             case POSITION_RANDOM:
-                for(int i = 1; i <= 10; i++) {
-                    audiourMediaList.add(new AudiourMedia("123", "Random Upload #" + i, "http://audiour.com/random"));
-                }
+                audiourMediaList = mRandomList;
                 break;
             case POSITION_RECENTS:
-                for(int i = 1; i <= 10; i++) {
-                    audiourMediaList.add(new AudiourMedia("123", "Recent Upload #" + i, "http://audiour.com/recent"));
-                }
+                audiourMediaList = mRecentList;
                 break;
         }
 
@@ -457,13 +455,35 @@ public class MainActivity extends FragmentActivity
 
     }
 
-    private class RetrievePopularFilesTask extends AsyncTask<String, Void, JSONArray> {
+    private class AsyncTaskParams {
+        private String mUrl;
+        private List<AudiourMedia> mAudiourMediaList;
 
-        private Exception exception;
+        public AsyncTaskParams(String url, List<AudiourMedia> audiourMediaList){
+            mUrl = url;
+            mAudiourMediaList = audiourMediaList;
+        }
 
-        protected JSONArray doInBackground(String... urls) {
+        public String getUrl(){
+            return mUrl;
+        }
+
+        public List<AudiourMedia> getList(){
+            return mAudiourMediaList;
+        }
+    }
+
+    private class RetrieveAudiourFilesTask extends AsyncTask<AsyncTaskParams, Void, JSONArray> {
+
+        private String mUrl;
+        private List<AudiourMedia> mAudiourMediaList;
+
+        protected JSONArray doInBackground(AsyncTaskParams... params) {
+            mUrl = params[0].getUrl();
+            mAudiourMediaList = params[0].getList();
+
             JSONParser parser = new JSONParser();
-            return parser.getJSONFromUrl(url);
+            return parser.getJSONFromUrl(mUrl);
         }
 
         protected void onPostExecute(JSONArray results) {
@@ -478,7 +498,7 @@ public class MainActivity extends FragmentActivity
                     String title = file.getString(TAG_TITLE);
                     String url = file.getString(TAG_URL);
 
-                    mPopularList.add(new AudiourMedia(id, title, url));
+                    mAudiourMediaList.add(new AudiourMedia(id, title, url));
                 }
 
             } catch (JSONException e) {
@@ -490,7 +510,7 @@ public class MainActivity extends FragmentActivity
             final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
                     R.layout.card_list_item,
-                    mPopularList
+                    mAudiourMediaList
             );
 
             popularFilesListView.setAdapter(listAdapter);
@@ -498,7 +518,7 @@ public class MainActivity extends FragmentActivity
             popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    onMediaSelected(mPopularList.get(position));
+                    onMediaSelected(mAudiourMediaList.get(position));
                 }
             });
         }
@@ -517,6 +537,8 @@ public class MainActivity extends FragmentActivity
             mAudiourMediaList = mediaList;
             mListViewId = listViewId;
             mMenuPosition = menuPosition;
+
+            if (mAudiourMediaList.size() == 0) retrieveAudiourMediaList();
         }
 
         @Override
@@ -563,6 +585,27 @@ public class MainActivity extends FragmentActivity
         public void onAttach(Activity activity) {
             super.onAttach(activity);
             ((MainActivity) activity).onSectionAttached(mMenuPosition);
+        }
+
+        private void retrieveAudiourMediaList(){
+
+            String url = "";
+
+            switch (mMenuPosition) {
+                case POSITION_TRENDING:
+                    url = URL_POPULAR;
+                    break;
+                case POSITION_RANDOM:
+                    url = URL_RANDOM;
+                    break;
+                case POSITION_RECENTS:
+                    url = URL_RECENT;
+                    break;
+            }
+
+            RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
+            AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mAudiourMediaList);
+            task.execute(asyncTaskParams);
         }
     }
 
