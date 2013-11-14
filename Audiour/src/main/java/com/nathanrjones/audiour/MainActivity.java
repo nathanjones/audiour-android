@@ -341,6 +341,8 @@ public class MainActivity extends FragmentActivity
         String url = mSelectedMedia.getUrl();
         String title = mSelectedMedia.getTitle();
 
+        mAudiourMeta.setTitle(title);
+
         EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
         urlEditText.setText(url);
 
