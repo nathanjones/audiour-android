@@ -29,6 +29,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -78,6 +79,8 @@ public class MainActivity extends FragmentActivity
     private Button mStopButton;
 
     private MediaPlayer mMediaPlayer;
+
+    private ProgressBar mProgressBar;
 
     private ApplicationSession mSession;
     private MediaProtocolMessageStream mMediaMessageStream;
@@ -381,7 +384,9 @@ public class MainActivity extends FragmentActivity
 
             try {
                 mMediaPlayer.setDataSource(url);
+                mProgressBar.setVisibility(View.VISIBLE);
             } catch (IOException e) {
+                mProgressBar.setVisibility(View.GONE);
                 Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
@@ -391,6 +396,12 @@ public class MainActivity extends FragmentActivity
                 public void onPrepared(MediaPlayer player) {
                     Toast.makeText(MainActivity.this, "Playing File", Toast.LENGTH_SHORT).show();
                     player.start();
+
+
+
+
+                    mProgressBar.setVisibility(View.GONE);
+
                 }
             });
 
@@ -544,6 +555,8 @@ public class MainActivity extends FragmentActivity
                 e.printStackTrace();
             }
 
+            mProgressBar.setVisibility(View.GONE);
+
             final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
 
             final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
@@ -583,6 +596,9 @@ public class MainActivity extends FragmentActivity
         @Override
         public void onStart() {
             super.onStart();
+
+            mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+            mProgressBar.setVisibility(View.VISIBLE);
 
             ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
