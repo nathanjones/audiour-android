@@ -129,11 +129,19 @@ public class MainActivity extends FragmentActivity
             layout.setAnchorPoint(0.3f);
         }
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity);
+        mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
+
+
         mCastContext = new CastContext( getApplicationContext() );
         MediaRouteHelper.registerMinimalMediaRouteProvider( mCastContext, this );
 
         mMediaRouter = MediaRouter.getInstance( getApplicationContext() );
-        mMediaRouteSelector = MediaRouteHelper.buildMediaRouteSelector( MediaRouteHelper.CATEGORY_CAST );
+        mMediaRouteSelector = MediaRouteHelper.buildMediaRouteSelector(
+                MediaRouteHelper.CATEGORY_CAST,
+                mAppName,
+                null
+        );
         mMediaRouterCallback = new MediaRouterCallback();
 
         mAudiourMeta = new ContentMetadata();
@@ -193,8 +201,6 @@ public class MainActivity extends FragmentActivity
             }
         });
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity);
-        mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
 
         String url = getIntent().getStringExtra("url");
 
