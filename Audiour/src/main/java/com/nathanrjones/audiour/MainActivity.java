@@ -62,8 +62,6 @@ public class MainActivity extends FragmentActivity
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private CharSequence mTitle;
 
-    private FragmentActivity mActivity;
-
     private CastContext mCastContext;
     private MediaRouteButton mMediaRouteButton;
     private MediaRouter mMediaRouter;
@@ -129,7 +127,7 @@ public class MainActivity extends FragmentActivity
             layout.setAnchorPoint(0.3f);
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mActivity);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
 
 
@@ -164,7 +162,6 @@ public class MainActivity extends FragmentActivity
     protected void onStart() {
         super.onStart();
 
-        mActivity = this;
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
 
@@ -365,13 +362,14 @@ public class MainActivity extends FragmentActivity
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         layout.setVisibility(View.VISIBLE);
 
+        if (mMediaPlayer != null){
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+
         if (mMediaMessageStream != null) {
             try {
                 mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
-
-                mMediaPlayer.release();
-                mMediaPlayer = null;
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -440,7 +438,7 @@ public class MainActivity extends FragmentActivity
             @Override
             public void onSessionStarted(ApplicationMetadata appMetadata) {
 
-                Toast.makeText(mActivity, "Session Started.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Session Started.", Toast.LENGTH_SHORT).show();
 
                 ApplicationChannel channel = mSession.getChannel();
 
@@ -462,12 +460,12 @@ public class MainActivity extends FragmentActivity
 
             @Override
             public void onSessionStartFailed(SessionError sessionError) {
-                Toast.makeText(mActivity, "Session Start Failed.", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Session Start Failed.", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onSessionEnded(SessionError error) {
-                Toast.makeText(mActivity, "Session Ended.", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Session Ended.", Toast.LENGTH_LONG).show();
             }
         });
 
