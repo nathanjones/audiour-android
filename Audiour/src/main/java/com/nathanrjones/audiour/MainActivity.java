@@ -4,6 +4,9 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -13,6 +16,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.MediaRouteButton;
 import android.support.v7.media.MediaRouteSelector;
@@ -108,6 +112,11 @@ public class MainActivity extends FragmentActivity
 
     AudiourMedia mSelectedMedia;
 
+    private int mNotifyId;
+    private NotificationManager mNotifyManager;
+    private NotificationCompat.Builder mNotifyBuilder;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -158,6 +167,8 @@ public class MainActivity extends FragmentActivity
 
             onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
         }
+
+        buildAppNotification();
 
     }
 
@@ -263,6 +274,41 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    public void buildAppNotification() {
+
+        String title = "Audiour";
+        String text = "Share Audio, Simply.";
+
+        if (mSelectedMedia != null) {
+            title = mSelectedMedia.getTitle();
+            text = mSelectedMedia.getId();
+        }
+
+        mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
+                    .setSmallIcon(R.drawable.ic_launcher)
+                    .setContentTitle(title)
+                    .setContentText(text);
+
+        Intent resultIntent = new Intent(MainActivity.this, MainActivity.class);
+
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                MainActivity.this,
+                0,
+                resultIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        mNotifyId = 001;
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+
+        mNotifyBuilder.addAction(android.R.drawable.ic_media_play ,"Play", resultPendingIntent);
+        mNotifyBuilder.addAction(android.R.drawable.ic_media_pause ,"Pause", resultPendingIntent);
+
+        mNotifyManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        //mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
+    }
+
     public void restoreActionBar() {
         ActionBar actionBar = getActionBar();
         assert actionBar != null;
@@ -364,6 +410,10 @@ public class MainActivity extends FragmentActivity
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         layout.setVisibility(View.VISIBLE);
+
+        mNotifyBuilder.setContentTitle(title);
+        mNotifyBuilder.setContentText(url);
+        mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
 
         if (mMediaPlayer != null){
             mMediaPlayer.release();
