@@ -7,7 +7,11 @@ import android.app.FragmentManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -83,6 +87,7 @@ public class MainActivity extends FragmentActivity
     private Button mStopButton;
 
     private MediaPlayer mMediaPlayer;
+    private int mCurrentPosition = 0;
 
     private ProgressBar mProgressBar;
 
@@ -110,6 +115,10 @@ public class MainActivity extends FragmentActivity
     private static final String URL_RANDOM = "http://audiour.com/Random";
     private static final String URL_RECENT = "http://audiour.com/RecentlyUploaded";
 
+    public static final String PLAY_ACTION = "com.nathanrjones.audiour.playbackcommand.play";
+    public static final String PAUSE_ACTION = "com.nathanrjones.audiour.playbackcommand.pause";
+    public static final String STOP_ACTION = "com.nathanrjones.audiour.playbackcommand.stop";
+
     AudiourMedia mSelectedMedia;
 
     private int mNotifyId;
@@ -121,6 +130,13 @@ public class MainActivity extends FragmentActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        IntentFilter commandFilter = new IntentFilter();
+        commandFilter.addAction(PLAY_ACTION);
+        commandFilter.addAction(PAUSE_ACTION);
+        commandFilter.addAction(STOP_ACTION);
+        registerReceiver(mIntentReceiver, commandFilter);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -136,7 +152,9 @@ public class MainActivity extends FragmentActivity
 
         if (layout != null){
             layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
-            layout.setAnchorPoint(0.3f);
+            layout.setAnchorPoint(0.6f);
+            //layout.setPanelHeight(68);
+            layout.setEnableDragViewTouchEvents(true);
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -231,6 +249,9 @@ public class MainActivity extends FragmentActivity
     protected void onDestroy() {
         MediaRouteHelper.unregisterMediaRouteProvider(mCastContext);
         mCastContext.dispose();
+
+        unregisterReceiver(mIntentReceiver);
+
         super.onDestroy();
     }
 
@@ -276,6 +297,8 @@ public class MainActivity extends FragmentActivity
 
     public void buildAppNotification() {
 
+        mNotifyId = 1;
+
         String title = "Audiour";
         String text = "Share Audio, Simply.";
 
@@ -290,7 +313,6 @@ public class MainActivity extends FragmentActivity
                     .setContentText(text);
 
         Intent resultIntent = new Intent(MainActivity.this, MainActivity.class);
-
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
                 MainActivity.this,
                 0,
@@ -298,11 +320,20 @@ public class MainActivity extends FragmentActivity
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
 
-        mNotifyId = 001;
-        mNotifyBuilder.setContentIntent(resultPendingIntent);
+        Intent playIntent = new Intent(PLAY_ACTION);
+        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
 
-        mNotifyBuilder.addAction(android.R.drawable.ic_media_play ,"Play", resultPendingIntent);
-        mNotifyBuilder.addAction(android.R.drawable.ic_media_pause ,"Pause", resultPendingIntent);
+        Intent pauseIntent = new Intent(PAUSE_ACTION);
+        PendingIntent pausePendingIntent = PendingIntent.getBroadcast(this, 0, pauseIntent, 0);
+
+        Intent stopIntent = new Intent(STOP_ACTION);
+        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, 0);
+
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+        mNotifyBuilder.setDeleteIntent(stopPendingIntent);
+        mNotifyBuilder.addAction(android.R.drawable.ic_media_play ,"Play", playPendingIntent);
+        mNotifyBuilder.addAction(android.R.drawable.ic_media_pause ,"Pause", pausePendingIntent);
+        mNotifyBuilder.addAction(android.R.drawable.ic_menu_delete ,"Stop", stopPendingIntent);
 
         mNotifyManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -374,6 +405,10 @@ public class MainActivity extends FragmentActivity
             }
         } catch (IOException e) {
         }
+        if (mMediaPlayer != null){
+            //mMediaPlayer.seekTo(mCurrentPosition);
+            mMediaPlayer.start();
+        }
     }
 
     public void onPauseClicked() {
@@ -383,15 +418,30 @@ public class MainActivity extends FragmentActivity
             }
         } catch (IOException e) {
         }
+        if (mMediaPlayer != null){
+            mCurrentPosition = mMediaPlayer.getCurrentPosition();
+            mMediaPlayer.pause();
+        }
+
     }
 
-    public void onStopClicked() {
+    public void onStopClicked()
+    {
+        mSelectedMedia = null;
+
         try {
             if (mMediaMessageStream != null) {
                 mMediaMessageStream.loadMedia("", mAudiourMeta);
             }
         } catch (IOException e) {
         }
+
+        if (mMediaPlayer != null){
+            mMediaPlayer.stop();
+        }
+
+        LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
+        layout.setVisibility(View.GONE);
     }
 
     public void onMediaSelected(AudiourMedia selected){
@@ -459,6 +509,22 @@ public class MainActivity extends FragmentActivity
         }
 
     }
+
+    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            String cmd = intent.getStringExtra("command");
+
+            if (PLAY_ACTION.equals(action)) {
+                onPlayClicked();
+            } else if (PAUSE_ACTION.equals(action)) {
+                onPauseClicked();
+            } else if (STOP_ACTION.equals(action)) {
+               onStopClicked();
+            }
+        }
+    };
 
     private class MediaRouterCallback extends MediaRouter.Callback {
         @Override
@@ -670,20 +736,7 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_placeholder, container, false);
-
-            SlidingUpPanelLayout layout = null;
-
-            if (rootView != null) {
-                layout = (SlidingUpPanelLayout) rootView.findViewById(R.id.sliding_layout);
-            }
-
-            if (layout != null){
-                layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
-                layout.setAnchorPoint(0.3f);
-            }
-
-            return rootView;
+            return inflater.inflate(R.layout.fragment_placeholder, container, false);
         }
 
         @Override
