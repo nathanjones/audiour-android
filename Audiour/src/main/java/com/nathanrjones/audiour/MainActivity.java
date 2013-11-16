@@ -113,7 +113,7 @@ public class MainActivity extends FragmentActivity
 
     private static final String URL_POPULAR = "http://audiour.com/Popular";
     private static final String URL_RANDOM = "http://audiour.com/Random";
-    private static final String URL_RECENT = "http://audiour.com/RecentlyUploaded";
+    private static final String URL_RECENT = "http://audiour.com/Recent";
 
     public static final String PLAY_ACTION = "com.nathanrjones.audiour.playbackcommand.play";
     public static final String PAUSE_ACTION = "com.nathanrjones.audiour.playbackcommand.pause";
