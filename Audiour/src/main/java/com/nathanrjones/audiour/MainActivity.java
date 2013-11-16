@@ -152,8 +152,8 @@ public class MainActivity extends FragmentActivity
 
         if (layout != null){
             layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
-            layout.setAnchorPoint(0.6f);
-            //layout.setPanelHeight(68);
+            layout.setAnchorPoint(0.8f);
+            layout.setHardAnchorPoint(true);
             layout.setEnableDragViewTouchEvents(true);
         }
 
@@ -197,17 +197,9 @@ public class MainActivity extends FragmentActivity
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
 
-        mLoadButton = (Button) findViewById(R.id.load_button);
         mPlayButton = (Button) findViewById(R.id.play_button);
         mPauseButton = (Button) findViewById(R.id.pause_button);
         mStopButton = (Button) findViewById(R.id.stop_button);
-
-        mLoadButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onLoadClicked();
-            }
-        });
 
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -229,19 +221,14 @@ public class MainActivity extends FragmentActivity
                 onStopClicked();
             }
         });
-
-
-        String url = getIntent().getStringExtra("url");
-
-        if (url != null && !url.equals("")) {
-            EditText input = (EditText) findViewById(R.id.audiour_url);
-            input.setText(url);
-        }
     }
 
     @Override
     protected void onStop() {
         mMediaRouter.removeCallback(mMediaRouterCallback);
+
+        mNotifyManager.cancel(mNotifyId);
+
         super.onStop();
     }
 
@@ -249,6 +236,16 @@ public class MainActivity extends FragmentActivity
     protected void onDestroy() {
         MediaRouteHelper.unregisterMediaRouteProvider(mCastContext);
         mCastContext.dispose();
+
+        if (mSession != null) {
+            try {
+                if (!mSession.hasStopped()) {
+                    mSession.endSession();
+                }
+            } catch (IOException e) {
+            }
+        }
+        mSession = null;
 
         unregisterReceiver(mIntentReceiver);
 
@@ -384,20 +381,6 @@ public class MainActivity extends FragmentActivity
         return super.onOptionsItemSelected(item);
     }
 
-
-    public void onLoadClicked() {
-        try {
-            if (mMediaMessageStream != null) {
-
-                EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
-                String audiourUrl = urlEditText.getText().toString();
-
-                mMediaMessageStream.loadMedia(audiourUrl, mAudiourMeta, true);
-            }
-        } catch (IOException e) {
-        }
-    }
-
     public void onPlayClicked() {
         try {
             if (mMediaMessageStream != null) {
@@ -451,9 +434,6 @@ public class MainActivity extends FragmentActivity
         String title = mSelectedMedia.getTitle();
 
         mAudiourMeta.setTitle(title);
-
-        EditText urlEditText = (EditText) findViewById(R.id.audiour_url);
-        urlEditText.setText(url);
 
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
         selectedMediaText.setText(title);
@@ -574,14 +554,12 @@ public class MainActivity extends FragmentActivity
                 mMediaMessageStream = new MediaProtocolMessageStream();
                 channel.attachMessageStream(mMediaMessageStream);
 
-                EditText editText = (EditText) findViewById(R.id.audiour_url);
-                String audiourUrl = editText.getText().toString();
-
-
-                try {
-                    mMediaMessageStream.loadMedia(audiourUrl, mAudiourMeta, true);
-                } catch (IOException e) {
-                    e.printStackTrace();
+                if (mSelectedMedia != null){
+                    try {
+                        mMediaMessageStream.loadMedia(mSelectedMedia.getUrl(), mAudiourMeta, true);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
