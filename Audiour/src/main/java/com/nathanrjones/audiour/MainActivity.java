@@ -34,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -81,10 +82,9 @@ public class MainActivity extends FragmentActivity
 
     private ContentMetadata mAudiourMeta;
 
-    private Button mLoadButton;
-    private Button mPlayButton;
-    private Button mPauseButton;
-    private Button mStopButton;
+    private ImageButton mPlayButton;
+    private ImageButton mPauseButton;
+    private ImageButton mStopButton;
 
     private MediaPlayer mMediaPlayer;
     private int mCurrentPosition = 0;
@@ -155,6 +155,7 @@ public class MainActivity extends FragmentActivity
             layout.setAnchorPoint(0.8f);
             layout.setHardAnchorPoint(true);
             layout.setEnableDragViewTouchEvents(true);
+            layout.setCoveredFadeColorEnabled(false);
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
@@ -197,9 +198,9 @@ public class MainActivity extends FragmentActivity
         mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
                 MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
 
-        mPlayButton = (Button) findViewById(R.id.play_button);
-        mPauseButton = (Button) findViewById(R.id.pause_button);
-        mStopButton = (Button) findViewById(R.id.stop_button);
+        mPlayButton = (ImageButton) findViewById(R.id.play_button);
+        mPauseButton = (ImageButton) findViewById(R.id.pause_button);
+        mStopButton = (ImageButton) findViewById(R.id.stop_button);
 
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -392,6 +393,8 @@ public class MainActivity extends FragmentActivity
             //mMediaPlayer.seekTo(mCurrentPosition);
             mMediaPlayer.start();
         }
+        mPlayButton.setVisibility(View.GONE);
+        mPauseButton.setVisibility(View.VISIBLE);
     }
 
     public void onPauseClicked() {
@@ -405,7 +408,8 @@ public class MainActivity extends FragmentActivity
             mCurrentPosition = mMediaPlayer.getCurrentPosition();
             mMediaPlayer.pause();
         }
-
+        mPauseButton.setVisibility(View.GONE);
+        mPlayButton.setVisibility(View.VISIBLE);
     }
 
     public void onStopClicked()
@@ -434,6 +438,9 @@ public class MainActivity extends FragmentActivity
         String title = mSelectedMedia.getTitle();
 
         mAudiourMeta.setTitle(title);
+
+        mPlayButton.setVisibility(View.GONE);
+        mPauseButton.setVisibility(View.VISIBLE);
 
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
         selectedMediaText.setText(title);

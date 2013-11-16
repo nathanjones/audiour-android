@@ -7,12 +7,11 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-
-    <SlidingUpPanelLayout
+    <com.nathanrjones.audiour.SlidingUpPanelLayout
         android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="#222">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -31,54 +30,55 @@
         <LinearLayout
             android:id="@+id/media_control_panel"
             android:visibility="gone"
+            android:padding="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#FFF"
-            android:orientation="vertical">
+            android:orientation="horizontal"
+            android:clickable="true">
 
             <TextView
                 android:id="@+id/selected_media"
                 android:text="Select a Track"
-                android:gravity="center"
-                android:layout_gravity="center"
-                android:layout_height="68dp"
-                android:layout_width="wrap_content"
+                android:textColor="#FFF"
+                android:gravity="left|center_vertical"
+                android:layout_gravity="center_vertical"
+                android:layout_height="52dp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:textSize="20sp"
                 android:fontFamily="sans-serif-light"/>
 
-            <LinearLayout
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:layout_margin="8dp" >
+            <ImageButton
+                android:id="@+id/play_button"
+                android:src="@android:drawable/ic_media_play"
+                android:visibility="gone"
+                android:background="@null"
+                android:layout_margin="8dp"
+                android:layout_gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <Button
-                    android:id="@+id/play_button"
-                    android:layout_weight="1"
-                    android:layout_alignParentLeft="true"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:text="Play" />
+            <ImageButton
+                android:id="@+id/pause_button"
+                android:src="@android:drawable/ic_media_pause"
+                android:visibility="gone"
+                android:background="@null"
+                android:layout_margin="8dp"
+                android:layout_gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <Button
-                    android:id="@+id/pause_button"
-                    android:layout_weight="1"
-                    android:layout_centerInParent="true"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:text="Pause" />
-
-                <Button
-                    android:id="@+id/stop_button"
-                    android:layout_weight="1"
-                    android:layout_alignParentRight="true"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:text="Stop"/>
-
-            </LinearLayout>
+            <ImageButton
+                android:id="@+id/stop_button"
+                android:src="@android:drawable/ic_menu_delete"
+                android:visibility="gone"
+                android:background="@null"
+                android:layout_margin="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
-    </SlidingUpPanelLayout>
+    </com.nathanrjones.audiour.SlidingUpPanelLayout>
 
     <fragment android:id="@+id/navigation_drawer"
         android:layout_width="@dimen/navigation_drawer_width"

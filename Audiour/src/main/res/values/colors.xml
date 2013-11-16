@@ -1,3 +1,5 @@
 <resources>
+    <color name="orange">#ffe9913c</color>
+    <color name="gray">#605f59</color>
     <color name="black">#000</color>
 </resources>
