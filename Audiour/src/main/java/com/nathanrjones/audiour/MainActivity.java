@@ -464,7 +464,6 @@ public class MainActivity extends FragmentActivity
                 e.printStackTrace();
             }
         } else {
-            Toast.makeText(MainActivity.this, "Loading File", Toast.LENGTH_SHORT).show();
 
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
@@ -481,14 +480,8 @@ public class MainActivity extends FragmentActivity
             mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer player) {
-                    Toast.makeText(MainActivity.this, "Playing File", Toast.LENGTH_SHORT).show();
-                    player.start();
-
-
-
-
                     mProgressBar.setVisibility(View.GONE);
-
+                    player.start();
                 }
             });
 
@@ -697,9 +690,11 @@ public class MainActivity extends FragmentActivity
         @Override
         public void onStart() {
             super.onStart();
-
-            mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
-            mProgressBar.setVisibility(View.VISIBLE);
+            
+            if (mAudiourMediaList.size() == 0) {
+                mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+                mProgressBar.setVisibility(View.VISIBLE);
+            }
 
             ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
