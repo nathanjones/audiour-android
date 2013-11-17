@@ -1,103 +1,56 @@
 package com.nathanrjones.audiour;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.MediaRouteButton;
-import android.support.v7.media.MediaRouteSelector;
-import android.support.v7.media.MediaRouter;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.cast.ApplicationChannel;
-import com.google.cast.ApplicationMetadata;
-import com.google.cast.ApplicationSession;
-import com.google.cast.CastContext;
-import com.google.cast.CastDevice;
-import com.google.cast.ContentMetadata;
-import com.google.cast.MediaProtocolMessageStream;
-import com.google.cast.MediaRouteAdapter;
-import com.google.cast.MediaRouteHelper;
-import com.google.cast.MediaRouteStateChangeListener;
-import com.google.cast.SessionError;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
 public class MainActivity extends FragmentActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks, MediaRouteAdapter {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private CharSequence mTitle;
 
-    private CastContext mCastContext;
+    private AudiourMediaRouteAdapter mAudiourMediaRouteAdapter;
     private MediaRouteButton mMediaRouteButton;
-    private MediaRouter mMediaRouter;
-    private MediaRouteSelector mMediaRouteSelector;
-    private MediaRouter.Callback mMediaRouterCallback;
-    private CastDevice mSelectedDevice;
-    private MediaRouteStateChangeListener mRouteStateListener;
-
-    private ContentMetadata mAudiourMeta;
 
     private ImageButton mPlayButton;
     private ImageButton mPauseButton;
     private ImageButton mStopButton;
 
-    private MediaPlayer mMediaPlayer;
-    private int mCurrentPosition = 0;
-
     private ProgressBar mProgressBar;
-
-    private ApplicationSession mSession;
-    private MediaProtocolMessageStream mMediaMessageStream;
-
-    private String mAppName;
-
-    private static final String NRJ_APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
     private static final int POSITION_TRENDING = 0;
     private static final int POSITION_RANDOM = 1;
@@ -159,24 +112,7 @@ public class MainActivity extends FragmentActivity
             layout.setCoveredFadeColorEnabled(false);
         }
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
-
-
-        mCastContext = new CastContext( getApplicationContext() );
-        MediaRouteHelper.registerMinimalMediaRouteProvider( mCastContext, this );
-
-        mMediaRouter = MediaRouter.getInstance( getApplicationContext() );
-        mMediaRouteSelector = MediaRouteHelper.buildMediaRouteSelector(
-                MediaRouteHelper.CATEGORY_CAST,
-                mAppName,
-                null
-        );
-        mMediaRouterCallback = new MediaRouterCallback();
-
-        mAudiourMeta = new ContentMetadata();
-        mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
-        mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
+        mAudiourMediaRouteAdapter = AudiourMediaRouteAdapter.getInstance(MainActivity.this);
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -185,7 +121,7 @@ public class MainActivity extends FragmentActivity
             Uri data = intent.getData();
             String id = data.getPathSegments().get(0);
 
-            onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
+//            onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
         }
 
         buildAppNotification();
@@ -196,8 +132,8 @@ public class MainActivity extends FragmentActivity
     protected void onStart() {
         super.onStart();
 
-        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
-                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+//        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
+//                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
 
         mPlayButton = (ImageButton) findViewById(R.id.play_button);
         mPauseButton = (ImageButton) findViewById(R.id.pause_button);
@@ -226,28 +162,11 @@ public class MainActivity extends FragmentActivity
     }
 
     @Override
-    protected void onStop() {
-        mMediaRouter.removeCallback(mMediaRouterCallback);
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
 
         mNotifyManager.cancel(mNotifyId);
 
-        MediaRouteHelper.unregisterMediaRouteProvider(mCastContext);
-        mCastContext.dispose();
-
-        if (mSession != null) {
-            try {
-                if (!mSession.hasStopped()) {
-                    mSession.endSession();
-                }
-            } catch (IOException e) {
-            }
-        }
-        mSession = null;
+        mAudiourMediaRouteAdapter.cleanup();
 
         unregisterReceiver(mIntentReceiver);
 
@@ -332,9 +251,11 @@ public class MainActivity extends FragmentActivity
         }
 
         mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
-                    .setSmallIcon(R.drawable.ic_launcher)
-                    .setContentTitle(title)
-                    .setContentText(text);
+            .setSmallIcon(R.drawable.ic_chromecast_off)
+            //.setLargeIcon((((BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher)).getBitmap()))
+            .setPriority(Notification.PRIORITY_HIGH)
+            .setContentTitle(title)
+            .setContentText(text);
 
         Intent resultIntent = new Intent(MainActivity.this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
@@ -361,7 +282,6 @@ public class MainActivity extends FragmentActivity
 
         mNotifyManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        //mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
     }
 
     public void restoreActionBar() {
@@ -377,14 +297,12 @@ public class MainActivity extends FragmentActivity
     public boolean onCreateOptionsMenu(Menu menu) {
 
         if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
+
             getMenuInflater().inflate( R.menu.main, menu );
 
             MenuItem mediaRouteItem = menu.findItem( R.id.action_cast );
             mMediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
-            mMediaRouteButton.setRouteSelector( mMediaRouteSelector );
+            mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mMediaRouteButton);
 
             restoreActionBar();
             return true;
@@ -395,9 +313,7 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+
         switch (item.getItemId()) {
             case R.id.action_settings:
                 Intent intent = new Intent();
@@ -415,115 +331,48 @@ public class MainActivity extends FragmentActivity
     }
 
     public void onPlayClicked() {
-        try {
-            if (mMediaMessageStream != null) {
-                mMediaMessageStream.resume();
-            }
-        } catch (IOException e) {
-        }
-        if (mMediaPlayer != null){
-            //mMediaPlayer.seekTo(mCurrentPosition);
-            mMediaPlayer.start();
-        }
+        mAudiourMediaRouteAdapter.play();
+
         mPlayButton.setVisibility(View.GONE);
         mPauseButton.setVisibility(View.VISIBLE);
     }
 
     public void onPauseClicked() {
-        try {
-            if (mMediaMessageStream != null) {
-                mMediaMessageStream.stop();
-            }
-        } catch (IOException e) {
-        }
-        if (mMediaPlayer != null){
-            mCurrentPosition = mMediaPlayer.getCurrentPosition();
-            mMediaPlayer.pause();
-        }
+        mAudiourMediaRouteAdapter.pause();
+
         mPauseButton.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
     }
 
-    public void onStopClicked()
-    {
-        mSelectedMedia = null;
-
-        try {
-            if (mMediaMessageStream != null) {
-                mMediaMessageStream.loadMedia("", mAudiourMeta);
-            }
-        } catch (IOException e) {
-        }
-
-        if (mMediaPlayer != null){
-            mMediaPlayer.stop();
-        }
+    public void onStopClicked() {
+        mAudiourMediaRouteAdapter.stop();
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         layout.setVisibility(View.GONE);
     }
 
     public void onMediaSelected(AudiourMedia selected){
+        mAudiourMediaRouteAdapter.setSelectedMedia(selected);
+
         mSelectedMedia = selected;
 
         String url = mSelectedMedia.getUrl();
         String title = mSelectedMedia.getTitle();
 
-        mAudiourMeta.setTitle(title);
-
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
-        selectedMediaText.setText(title);
+        if (selectedMediaText != null) selectedMediaText.setText(title);
+
+        mPauseButton.setVisibility(View.GONE);
+        mPlayButton.setVisibility(View.VISIBLE);
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
-        layout.setVisibility(View.VISIBLE);
+        if (layout != null) layout.setVisibility(View.VISIBLE);
 
-        mNotifyBuilder.setContentTitle(title);
-        mNotifyBuilder.setContentText(url);
-        mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
-
-        if (mMediaPlayer != null){
-            mMediaPlayer.release();
-            mMediaPlayer = null;
+        if (mNotifyBuilder != null){
+            mNotifyBuilder.setContentTitle(title);
+            mNotifyBuilder.setContentText(url);
+            mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
         }
-
-        if (mMediaMessageStream != null) {
-            try {
-                mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
-
-                mPlayButton.setVisibility(View.GONE);
-                mPauseButton.setVisibility(View.VISIBLE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-
-            mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-
-            try {
-                mMediaPlayer.setDataSource(url);
-                mProgressBar.setVisibility(View.VISIBLE);
-                mPlayButton.setVisibility(View.GONE);
-                mPauseButton.setVisibility(View.GONE);
-            } catch (IOException e) {
-                mProgressBar.setVisibility(View.GONE);
-                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
-                e.printStackTrace();
-            }
-
-            mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer player) {
-                    mProgressBar.setVisibility(View.GONE);
-                    mPlayButton.setVisibility(View.GONE);
-                    mPauseButton.setVisibility(View.VISIBLE);
-                    player.start();
-                }
-            });
-
-            mMediaPlayer.prepareAsync();
-        }
-
     }
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
@@ -541,114 +390,6 @@ public class MainActivity extends FragmentActivity
             }
         }
     };
-
-    private class MediaRouterCallback extends MediaRouter.Callback {
-        @Override
-        public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo route) {
-            MediaRouteHelper.requestCastDeviceForRoute(route);
-        }
-
-        @Override
-        public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo route) {
-            try {
-                if (mSession != null) {
-                    mSession.setStopApplicationWhenEnding(true);
-                    mSession.endSession();
-                }
-            } catch (IllegalStateException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            mMediaMessageStream = null;
-            mSelectedDevice = null;
-        }
-    }
-
-    @Override
-    public void onDeviceAvailable(CastDevice castDevice, String s, MediaRouteStateChangeListener mediaRouteStateChangeListener) {
-        mSelectedDevice = castDevice;
-        mRouteStateListener = mediaRouteStateChangeListener;
-
-        String deviceName = castDevice.getFriendlyName();
-        Toast.makeText(this, "Connected to " + deviceName, Toast.LENGTH_SHORT).show();
-
-        openSession();
-    }
-
-    /**
-     * Starts a new video playback session with the current CastContext and selected device.
-     */
-    private void openSession() {
-        mSession = new ApplicationSession(mCastContext, mSelectedDevice);
-
-        int flags = 0;
-
-        mSession.setApplicationOptions(flags);
-
-        mSession.setListener(new com.google.cast.ApplicationSession.Listener() {
-
-            @Override
-            public void onSessionStarted(ApplicationMetadata appMetadata) {
-
-                Toast.makeText(MainActivity.this, "Session Started.", Toast.LENGTH_SHORT).show();
-
-                ApplicationChannel channel = mSession.getChannel();
-
-                if (channel == null) return;
-
-                mMediaMessageStream = new MediaProtocolMessageStream();
-                channel.attachMessageStream(mMediaMessageStream);
-
-                if (mSelectedMedia != null){
-                    try {
-                        mMediaMessageStream.loadMedia(mSelectedMedia.getUrl(), mAudiourMeta, true);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (mMediaPlayer != null){
-                    mMediaPlayer.release();
-                    mMediaPlayer = null;
-                }
-            }
-
-            @Override
-            public void onSessionStartFailed(SessionError sessionError) {
-                Toast.makeText(MainActivity.this, "Session Start Failed.", Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onSessionEnded(SessionError error) {
-                Toast.makeText(MainActivity.this, "Session Ended.", Toast.LENGTH_LONG).show();
-            }
-        });
-
-        try {
-            Toast.makeText(this, "Starting Cast Keys Session", Toast.LENGTH_SHORT).show();
-            mSession.startSession(NRJ_APP_NAME);
-        } catch (IOException e) {
-            Toast.makeText(this, "Failed to open session", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    public void onSetVolume(double volume) {
-        try {
-            if(mMediaMessageStream != null){
-                mMediaMessageStream.setVolume(volume);
-                mRouteStateListener.onVolumeChanged(volume);
-            }
-        } catch (IllegalStateException e){
-        } catch (IOException e){
-        }
-    }
-
-    @Override
-    public void onUpdateVolume(double v) {
-
-    }
 
     private class AsyncTaskParams {
         private String mUrl;
