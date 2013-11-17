@@ -2,6 +2,7 @@ package com.nathanrjones.audiour;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.Notification;
@@ -256,26 +257,10 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        List<AudiourMedia> audiourMediaList = new ArrayList<AudiourMedia>();
-
-        switch (position){
-            case POSITION_TRENDING:
-                audiourMediaList = mPopularList;
-                break;
-            case POSITION_RANDOM:
-                audiourMediaList = mRandomList;
-                break;
-            case POSITION_RECENTS:
-                audiourMediaList = mRecentList;
-                break;
-        }
-
-        Fragment fragment = new AudiourMediaListFragment(audiourMediaList, android.R.id.list, position);
-
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
+                .replace(R.id.container, AudiourMediaListFragment.newInstance(position))
                 .commit();
     }
 
@@ -290,6 +275,47 @@ public class MainActivity extends FragmentActivity
             case POSITION_RECENTS:
                 mTitle = getString(R.string.title_recents);
                 break;
+        }
+    }
+
+    public void onSectionStarted(int number){
+        final List<AudiourMedia> mediaList;
+
+        switch (number) {
+            case POSITION_TRENDING:
+                mediaList = mPopularList;
+                break;
+            case POSITION_RANDOM:
+                mediaList = mRandomList;
+                break;
+            case POSITION_RECENTS:
+                mediaList = mRecentList;
+                break;
+            default:
+                mediaList = new ArrayList<AudiourMedia>();
+                break;
+        }
+
+        if (mediaList.size() == 0) {
+            populateAudiourMediaList(number, mediaList);
+        } else {
+            ListAdapter listAdapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this,
+                    R.layout.card_list_item,
+                    mediaList
+            );
+
+            ListView listView = (ListView) findViewById(android.R.id.list);
+
+            if (listView != null){
+                listView.setAdapter(listAdapter);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        onMediaSelected(mediaList.get(position));
+                    }
+                });
+            }
         }
     }
 
@@ -377,7 +403,13 @@ public class MainActivity extends FragmentActivity
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, SettingsActivity.class);
                 startActivityForResult(intent, 0);
-                return true;
+                break;
+            case R.id.action_about:
+                final Dialog dialog = new Dialog(MainActivity.this);
+                dialog.setContentView(R.layout.fragment_about);
+                dialog.setTitle("About Audiour Beta");
+                dialog.show();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -439,9 +471,6 @@ public class MainActivity extends FragmentActivity
 
         mAudiourMeta.setTitle(title);
 
-        mPlayButton.setVisibility(View.GONE);
-        mPauseButton.setVisibility(View.VISIBLE);
-
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
         selectedMediaText.setText(title);
 
@@ -481,6 +510,8 @@ public class MainActivity extends FragmentActivity
                 @Override
                 public void onPrepared(MediaPlayer player) {
                     mProgressBar.setVisibility(View.GONE);
+                    mPlayButton.setVisibility(View.GONE);
+                    mPauseButton.setVisibility(View.VISIBLE);
                     player.start();
                 }
             });
@@ -649,7 +680,7 @@ public class MainActivity extends FragmentActivity
                 e.printStackTrace();
             }
 
-            mProgressBar.setVisibility(View.GONE);
+            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
 
             final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
 
@@ -670,82 +701,28 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    // Fragments
+    private void populateAudiourMediaList(int currentPosition, List<AudiourMedia> mediaList){
 
-    public class AudiourMediaListFragment extends Fragment {
+        String url = "";
 
-        private List<AudiourMedia> mAudiourMediaList = new ArrayList<AudiourMedia>();
-        private ListView mListView;
-        private int mListViewId;
-        private int mMenuPosition;
-
-        public AudiourMediaListFragment(List<AudiourMedia> mediaList, int listViewId, int menuPosition) {
-            mAudiourMediaList = mediaList;
-            mListViewId = listViewId;
-            mMenuPosition = menuPosition;
-
-            if (mAudiourMediaList.size() == 0) retrieveAudiourMediaList();
+        switch (currentPosition) {
+            case POSITION_TRENDING:
+                url = URL_POPULAR;
+                break;
+            case POSITION_RANDOM:
+                url = URL_RANDOM;
+                break;
+            case POSITION_RECENTS:
+                url = URL_RECENT;
+                break;
         }
 
-        @Override
-        public void onStart() {
-            super.onStart();
-            
-            if (mAudiourMediaList.size() == 0) {
-                mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
+        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        if (mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
 
-            ListAdapter listAdapter = new AudiourMediaArrayAdapter(
-                    MainActivity.this,
-                    R.layout.card_list_item,
-                    mAudiourMediaList
-            );
-
-            ListView popularFilesListView = (ListView) findViewById(mListViewId);
-
-            popularFilesListView.setAdapter(listAdapter);
-            popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    onMediaSelected(mAudiourMediaList.get(position));
-                }
-            });
-
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            return inflater.inflate(R.layout.fragment_placeholder, container, false);
-        }
-
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(mMenuPosition);
-        }
-
-        private void retrieveAudiourMediaList(){
-
-            String url = "";
-
-            switch (mMenuPosition) {
-                case POSITION_TRENDING:
-                    url = URL_POPULAR;
-                    break;
-                case POSITION_RANDOM:
-                    url = URL_RANDOM;
-                    break;
-                case POSITION_RECENTS:
-                    url = URL_RECENT;
-                    break;
-            }
-
-            RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
-            AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mAudiourMediaList);
-            task.execute(asyncTaskParams);
-        }
+        RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
+        AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mediaList);
+        task.execute(asyncTaskParams);
     }
-
 
 }
