@@ -228,14 +228,14 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onStop() {
         mMediaRouter.removeCallback(mMediaRouterCallback);
-
-        mNotifyManager.cancel(mNotifyId);
-
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
+
+        mNotifyManager.cancel(mNotifyId);
+
         MediaRouteHelper.unregisterMediaRouteProvider(mCastContext);
         mCastContext.dispose();
 
@@ -489,6 +489,9 @@ public class MainActivity extends FragmentActivity
         if (mMediaMessageStream != null) {
             try {
                 mMediaMessageStream.loadMedia(url, mAudiourMeta, true);
+
+                mPlayButton.setVisibility(View.GONE);
+                mPauseButton.setVisibility(View.VISIBLE);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -547,8 +550,18 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo route) {
+            try {
+                if (mSession != null) {
+                    mSession.setStopApplicationWhenEnding(true);
+                    mSession.endSession();
+                }
+            } catch (IllegalStateException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            mMediaMessageStream = null;
             mSelectedDevice = null;
-            mRouteStateListener = null;
         }
     }
 
