@@ -500,6 +500,8 @@ public class MainActivity extends FragmentActivity
             try {
                 mMediaPlayer.setDataSource(url);
                 mProgressBar.setVisibility(View.VISIBLE);
+                mPlayButton.setVisibility(View.GONE);
+                mPauseButton.setVisibility(View.GONE);
             } catch (IOException e) {
                 mProgressBar.setVisibility(View.GONE);
                 Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();

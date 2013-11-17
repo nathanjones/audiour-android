@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Audiour Beta</string>
-    <string name="nrj_cast_app">af2828a5-5a82-4be6-960a-2171287aed09</string>
+    <string name="default_app_name">af2828a5-5a82-4be6-960a-2171287aed09</string>
 
     <!-- Titles -->
     <string name="title_trending">Trending</string>
@@ -24,8 +24,12 @@
     <string name="pref_username_summary">Your Audiour Username</string>
     <string name="pref_default_url">Default Audiour URL</string>
     <string name="pref_default_url_summary">This will populate when you load the app.</string>
-    <string name="pref_app_name">Cast App Name</string>
+    <string name="pref_app_name">Cast Application ID</string>
     <string name="pref_app_name_summary">The Chromecast App Name or ID given by Google.</string>
+    <string name="pref_receiver_setup">Receiver Setup</string>
+    <string name="pref_receiver_setup_summary">Instructions to setup your Chromecast Receiver.</string>
+    <string name="pref_receiver_setup_url">https://github.com/nathanjones/audiour-android/blob/master/README.md#setup-instructions</string>
+
 
     <!-- Main Activity -->
     <string name="audiour_url_hint">Enter an Audiour URL</string>

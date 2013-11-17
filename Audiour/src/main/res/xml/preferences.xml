@@ -5,21 +5,48 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <EditTextPreference
-        android:key="pref_username"
-        android:title="@string/pref_username"
-        android:summary="@string/pref_username_summary" />
+    <PreferenceCategory
+        android:title="General"
+        android:key="general_category">
 
-    <EditTextPreference
-        android:key="pref_default_url"
-        android:title="@string/pref_default_url"
-        android:summary="@string/pref_default_url_summary"
-        android:defaultValue="@string/audiour_url_default" />
+        <EditTextPreference
+            android:key="pref_username"
+            android:enabled="false"
+            android:title="@string/pref_username"
+            android:summary="@string/pref_username_summary" />
 
-    <EditTextPreference
-        android:key="pref_app_name"
-        android:title="@string/pref_app_name"
-        android:summary="@string/pref_app_name_summary"
-        android:defaultValue="@string/nrj_cast_app" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Chromecast Setup"
+        android:key="chromecast_category">
+
+        <EditTextPreference
+            android:key="pref_app_name"
+            android:title="@string/pref_app_name"
+            android:summary="@string/pref_app_name_summary"
+            android:defaultValue="@string/default_app_name" />
+
+        <PreferenceScreen
+            android:title="@string/pref_receiver_setup"
+            android:summary="@string/pref_receiver_setup_summary">
+
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_receiver_setup_url" />
+
+        </PreferenceScreen>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="About"
+        android:key="about_category">
+
+        <Preference
+            android:title="Version"
+            android:summary="0.1"/>
+
+        </PreferenceCategory>
 
 </PreferenceScreen>
