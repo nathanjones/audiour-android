@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Audiour - Share Audio, Simply</string>
+    <string name="app_name">Audiour Beta</string>
     <string name="nrj_cast_app">af2828a5-5a82-4be6-960a-2171287aed09</string>
 
     <!-- Titles -->
@@ -17,6 +17,7 @@
     <!-- Actions -->
     <string name="action_cast">Cast</string>
     <string name="action_settings">Settings</string>
+    <string name="action_about">About</string>
 
     <!-- Preferences -->
     <string name="pref_username">Username</string>

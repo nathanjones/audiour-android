@@ -12,6 +12,9 @@
     </style>
 
     <style name="DarkDialog" parent="android:Theme.Holo.Dialog">
+        <item name="android:textColor">#FFF</item>
+        <item name="android:background">@color/gray</item>
+        <item name="android:weekSeparatorLineColor">#FF0000</item>
     </style>
 
 </resources>
