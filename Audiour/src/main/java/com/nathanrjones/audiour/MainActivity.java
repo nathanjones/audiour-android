@@ -607,6 +607,11 @@ public class MainActivity extends FragmentActivity
                         e.printStackTrace();
                     }
                 }
+
+                if (mMediaPlayer != null){
+                    mMediaPlayer.release();
+                    mMediaPlayer = null;
+                }
             }
 
             @Override
