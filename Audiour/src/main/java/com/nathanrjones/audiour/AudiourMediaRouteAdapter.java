@@ -1,5 +1,7 @@
 package com.nathanrjones.audiour;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
@@ -45,6 +47,8 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
     private ApplicationSession mSession;
     private MediaProtocolMessageStream mMediaMessageStream;
 
+    private ProgressDialog mProgressDialog;
+
     private String mAppName;
     private static final String NRJ_APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
@@ -58,7 +62,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
     }
 
     private AudiourMediaRouteAdapter(Context activity) {
-        mContext = activity.getApplicationContext();
+        mContext = activity;
 
         mCastContext = new CastContext(mContext);
         mMediaRouter = MediaRouter.getInstance(mContext);
@@ -256,7 +260,10 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
 
             try {
                 mMediaPlayer.setDataSource(url);
-//                mProgressBar.setVisibility(View.VISIBLE);
+
+                mProgressDialog = new ProgressDialog(mContext);
+                mProgressDialog.setMessage("Loading selected file...");
+                mProgressDialog.show();
 //                mPlayButton.setVisibility(View.GONE);
 //                mPauseButton.setVisibility(View.GONE);
             } catch (IOException e) {
@@ -267,7 +274,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
             mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer player) {
-//                    mProgressBar.setVisibility(View.GONE);
+                    mProgressDialog.dismiss();
 //                    mPlayButton.setVisibility(View.GONE);
 //                    mPauseButton.setVisibility(View.VISIBLE);
                     player.start();

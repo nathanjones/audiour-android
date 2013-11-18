@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -252,7 +253,7 @@ public class MainActivity extends FragmentActivity
 
         mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
             .setSmallIcon(R.drawable.ic_chromecast_off)
-            //.setLargeIcon((((BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher)).getBitmap()))
+            .setLargeIcon((((BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher)).getBitmap()))
             .setPriority(Notification.PRIORITY_HIGH)
             .setContentTitle(title)
             .setContentText(text);
@@ -362,8 +363,8 @@ public class MainActivity extends FragmentActivity
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
         if (selectedMediaText != null) selectedMediaText.setText(title);
 
-        mPauseButton.setVisibility(View.GONE);
-        mPlayButton.setVisibility(View.VISIBLE);
+        mPauseButton.setVisibility(View.VISIBLE);
+        mPlayButton.setVisibility(View.GONE);
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         if (layout != null) layout.setVisibility(View.VISIBLE);
