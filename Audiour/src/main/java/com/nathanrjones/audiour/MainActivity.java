@@ -168,7 +168,10 @@ public class MainActivity extends FragmentActivity
             } else if (id.equals("recent")) {
                 onNavigationDrawerItemSelected(POSITION_RECENTS);
             } else {
-                onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
+                //onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
+                RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
+                task.execute("http://audiour.com/" + id);
+
             }
 
 
@@ -423,7 +426,7 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    private class RetrieveAudiourMetadata extends AsyncTask<String, Void, JSONArray> {
+    private class RetrieveAudiourMetadataTask extends AsyncTask<String, Void, JSONArray> {
 
         private String mUrl;
 
@@ -434,9 +437,10 @@ public class MainActivity extends FragmentActivity
             return parser.getJSONFromUrl(mUrl);
         }
 
-        protected void onPostExecute(JSONObject result) {
+        protected void onPostExecute(JSONArray results) {
 
             try {
+                JSONObject result = results.getJSONObject(0);
 
                 String id = result.getString(TAG_ID);
                 String title = result.getString(TAG_TITLE);
@@ -449,6 +453,7 @@ public class MainActivity extends FragmentActivity
             }
 
             if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
+
         }
 
     }
