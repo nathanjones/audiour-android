@@ -101,6 +101,10 @@ public class MainActivity extends FragmentActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
+        mPlayButton = (ImageButton) findViewById(R.id.play_button);
+        mPauseButton = (ImageButton) findViewById(R.id.pause_button);
+        mStopButton = (ImageButton) findViewById(R.id.stop_button);
+
         SlidingUpPanelLayout layout = null;
 
         layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
@@ -114,17 +118,7 @@ public class MainActivity extends FragmentActivity
         }
 
         mAudiourMediaRouteAdapter = AudiourMediaRouteAdapter.getInstance(MainActivity.this);
-
-        final Intent intent = getIntent();
-        final String action = intent.getAction();
-
-        if (Intent.ACTION_VIEW.equals(action)){
-            Uri data = intent.getData();
-            String id = data.getPathSegments().get(0);
-
-//            onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
-        }
-
+    
         buildAppNotification();
 
     }
@@ -132,13 +126,6 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onStart() {
         super.onStart();
-
-//        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
-//                MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
-
-        mPlayButton = (ImageButton) findViewById(R.id.play_button);
-        mPauseButton = (ImageButton) findViewById(R.id.pause_button);
-        mStopButton = (ImageButton) findViewById(R.id.stop_button);
 
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -160,6 +147,32 @@ public class MainActivity extends FragmentActivity
                 onStopClicked();
             }
         });
+
+        final Intent intent = getIntent();
+        final String action = intent.getAction();
+
+        if (Intent.ACTION_VIEW.equals(action)){
+            Uri data = intent.getData();
+            if (data == null) return;
+
+            List<String> segments = data.getPathSegments();
+            if (segments == null) return;
+            if (segments.isEmpty()) return;
+
+            String id = segments.get(0);
+
+            if (id.equals("popular")) {
+                onNavigationDrawerItemSelected(POSITION_TRENDING);
+            } else if (id.equals("random")) {
+                onNavigationDrawerItemSelected(POSITION_RANDOM);
+            } else if (id.equals("recent")) {
+                onNavigationDrawerItemSelected(POSITION_RECENTS);
+            } else {
+                onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
+            }
+
+
+        }
     }
 
     @Override
@@ -408,6 +421,36 @@ public class MainActivity extends FragmentActivity
         public List<AudiourMedia> getList(){
             return mAudiourMediaList;
         }
+    }
+
+    private class RetrieveAudiourMetadata extends AsyncTask<String, Void, JSONArray> {
+
+        private String mUrl;
+
+        protected JSONArray doInBackground(String... params) {
+            mUrl = params[0];
+
+            JSONParser parser = new JSONParser();
+            return parser.getJSONFromUrl(mUrl);
+        }
+
+        protected void onPostExecute(JSONObject result) {
+
+            try {
+
+                String id = result.getString(TAG_ID);
+                String title = result.getString(TAG_TITLE);
+                String url = result.getString(TAG_URL);
+
+                onMediaSelected(new AudiourMedia(id, title, url));
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
+        }
+
     }
 
     private class RetrieveAudiourFilesTask extends AsyncTask<AsyncTaskParams, Void, JSONArray> {
