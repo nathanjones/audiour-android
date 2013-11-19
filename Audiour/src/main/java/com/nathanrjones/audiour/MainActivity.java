@@ -426,21 +426,20 @@ public class MainActivity extends FragmentActivity
         }
     }
 
-    private class RetrieveAudiourMetadataTask extends AsyncTask<String, Void, JSONArray> {
+    private class RetrieveAudiourMetadataTask extends AsyncTask<String, Void, JSONObject> {
 
         private String mUrl;
 
-        protected JSONArray doInBackground(String... params) {
+        protected JSONObject doInBackground(String... params) {
             mUrl = params[0];
 
             JSONParser parser = new JSONParser();
             return parser.getJSONFromUrl(mUrl);
         }
 
-        protected void onPostExecute(JSONArray results) {
+        protected void onPostExecute(JSONObject result) {
 
             try {
-                JSONObject result = results.getJSONObject(0);
 
                 String id = result.getString(TAG_ID);
                 String title = result.getString(TAG_TITLE);
@@ -468,7 +467,7 @@ public class MainActivity extends FragmentActivity
             mAudiourMediaList = params[0].getList();
 
             JSONParser parser = new JSONParser();
-            return parser.getJSONFromUrl(mUrl);
+            return parser.getJSONArrayFromUrl(mUrl);
         }
 
         protected void onPostExecute(JSONArray results) {
