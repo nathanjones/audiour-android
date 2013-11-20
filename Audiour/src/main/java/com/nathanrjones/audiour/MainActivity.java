@@ -1,6 +1,7 @@
 package com.nathanrjones.audiour;
 
 import android.app.ActionBar;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.FragmentManager;
 import android.app.Notification;
@@ -8,6 +9,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.BitmapDrawable;
@@ -22,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -346,6 +349,9 @@ public class MainActivity extends FragmentActivity
                 intent.setClass(MainActivity.this, SettingsActivity.class);
                 startActivityForResult(intent, 0);
                 break;
+            case R.id.action_search:
+                onShowSearchDialog();
+                break;
             case R.id.action_about:
                 final Dialog dialog = new Dialog(MainActivity.this);
                 dialog.setContentView(R.layout.fragment_about);
@@ -354,6 +360,37 @@ public class MainActivity extends FragmentActivity
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void onShowSearchDialog(){
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(getString(R.string.search_title));
+        alert.setMessage(getString(R.string.search_prompt));
+
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        alert.setPositiveButton("Open", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+
+                if (!value.isEmpty()){
+                    RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
+                    task.execute("http://audiour.com/" + value);
+                }
+
+                return;
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                return;
+            }
+        });
+
+        alert.show();
     }
 
     public void onPlayClicked() {

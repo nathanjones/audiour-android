@@ -31,10 +31,13 @@
     <string name="pref_receiver_setup_summary">Instructions to setup your Chromecast Receiver.</string>
     <string name="pref_receiver_setup_url">https://github.com/nathanjones/audiour-android/blob/master/README.md#setup-instructions</string>
 
-
     <!-- Main Activity -->
     <string name="audiour_url_hint">Enter an Audiour URL</string>
     <string name="audiour_url_default">http://audiour.com/frglqrgg.mp3</string>
+    <string name="action_search">Search</string>
+    <string name="search_title">Open a File</string>
+    <string name="search_prompt">To open any file, enter an Audiour File ID in the field below</string>
+
 
 
 </resources>

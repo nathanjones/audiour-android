@@ -5,13 +5,21 @@
         android:actionProviderClass="android.support.v7.app.MediaRouteActionProvider"
         android:actionViewClass="android.support.v7.app.MediaRouteButton"
         android:showAsAction="always"/>
+
+    <item android:id="@+id/action_search"
+        android:title="@string/action_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:orderInCategory="100"
+        android:showAsAction="ifRoom" />
+
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="200"
         android:showAsAction="never" />
+
     <item android:id="@+id/action_about"
         android:visible="false"
         android:title="@string/action_about"
-        android:orderInCategory="200"
+        android:orderInCategory="300"
         android:showAsAction="never" />
 </menu>
