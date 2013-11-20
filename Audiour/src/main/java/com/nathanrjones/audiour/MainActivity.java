@@ -53,19 +53,22 @@ public class MainActivity extends FragmentActivity
 
     private ProgressBar mProgressBar;
 
-    private static final int POSITION_TRENDING = 0;
-    private static final int POSITION_RANDOM = 1;
-    private static final int POSITION_RECENTS = 2;
+    private static final int POSITION_FEATURED = 0;
+    private static final int POSITION_TRENDING = 1;
+    private static final int POSITION_RANDOM = 2;
+    private static final int POSITION_RECENTS = 3;
 
     // JSON Node names
     private static final String TAG_ID = "AudioFileId";
     private static final String TAG_TITLE = "Title";
     private static final String TAG_URL = "Mp3Url";
 
+    List<AudiourMedia> mFeaturedList = new ArrayList<AudiourMedia>();
     List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
     List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
     List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
 
+    private static final String URL_FEATURED = "http://audiour.com/Featured";
     private static final String URL_POPULAR = "http://audiour.com/Popular";
     private static final String URL_RANDOM = "http://audiour.com/Random";
     private static final String URL_RECENT = "http://audiour.com/Recent";
@@ -202,6 +205,9 @@ public class MainActivity extends FragmentActivity
 
     public void onSectionAttached(int number) {
         switch (number) {
+            case POSITION_FEATURED:
+                mTitle = getString(R.string.title_featured);
+                break;
             case POSITION_TRENDING:
                 mTitle = getString(R.string.title_trending);
                 break;
@@ -218,6 +224,9 @@ public class MainActivity extends FragmentActivity
         final List<AudiourMedia> mediaList;
 
         switch (number) {
+            case POSITION_FEATURED:
+                mediaList = mFeaturedList;
+                break;
             case POSITION_TRENDING:
                 mediaList = mPopularList;
                 break;
@@ -515,6 +524,9 @@ public class MainActivity extends FragmentActivity
         String url = "";
 
         switch (currentPosition) {
+            case POSITION_FEATURED:
+                url = URL_FEATURED;
+                break;
             case POSITION_TRENDING:
                 url = URL_POPULAR;
                 break;
