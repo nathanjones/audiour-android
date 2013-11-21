@@ -1,0 +1,193 @@
+
+<html>
+
+<link rel="icon" href="http://audiour.com/favicon.ico" />
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:300|Arvo' rel='stylesheet' type='text/css'>
+
+<style>
+    body {
+        font-family: 'Open Sans', Helvetica, Arial;
+        color: #505050;
+        background-color: #f5f4ee;
+        font-size: 2.5em;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        font-family: 'Arvo';
+        font-weight: 300;
+        color: #F3F3F3;
+        background-color: #605f59;
+        box-shadow: 0 0 3px #333333;
+        padding: 0.5em 0;
+        margin: 0;
+    }
+    h2 {
+        font-weight: 300;
+        margin:	1em 1em 0;
+    }
+    #player {
+        display: none;
+        zoom: 1.75;
+        margin-top: 1em;
+    }
+
+    /* Loading indicator */
+    .loading-overlay {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #111;
+        transition: opacity 0.5s ease;
+    }
+
+    body.idle .loading-overlay {
+        opacity: 1;
+    }
+
+    .loading {
+        position: relative;
+        width: 120px;    /* diameter */
+        height: 120px;    /* diameter */
+        margin: 20% auto;
+    }
+    .outer, .inner, .loading:after {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+    }
+    /* Mask */
+    .loading:after {
+        content:" ";
+        margin: 10%;    /* stroke width */
+        border-radius: 100%;
+        background: #111;    /* container background */
+    }
+    /* Spinning gradients */
+    .outer, .inner {
+        animation-duration: 5s;    /* speed */
+        -webkit-animation-duration: 5s;    /* speed */
+        animation-iteration-count: infinite;
+        -webkit-animation-iteration-count: infinite;
+        animation-timing-function: linear;
+        -webkit-animation-timing-function: linear;
+    }
+    .outer {
+        animation-name: rotate-outer;
+        -webkit-animation-name: rotate-outer;
+    }
+    .inner {
+        animation-name: rotate-inner;
+        -webkit-animation-name: rotate-inner;
+    }
+    /* Halfs */
+    .outer:before, .inner:before, .outer:after, .inner:after {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        content:" ";
+    }
+    /* Left half */
+    .outer:before, .inner:before {
+        left: 0;
+        right: 50%;
+        border-radius: 72px 0 0 72px;    /* diameter */
+    }
+    /* Right half */
+    .outer:after, .inner:after {
+        left: 50%;
+        right: 0;
+        border-radius: 0 72px 72px 0;    /* diameter */
+    }
+    /* Half gradients */
+    .outer:before {
+        background-image: -webkit-linear-gradient(top, hsla(0, 0%, 100%, 0.0), hsla(0, 0%, 100%, 0.5));
+        background-image: -moz-linear-gradient(top, hsla(0, 0%, 100%, 0.0), hsla(0, 0%, 100%, 0.5));
+        background-image: linear-gradient(to bottom, hsla(0, 0%, 100%, 0.0), hsla(0, 0%, 100%, 0.5));
+    }
+    .outer:after {
+        background-image: -webkit-linear-gradient(top, hsla(0, 0%, 100%, 1.0), hsla(0, 0%, 100%, 0.5));
+        background-image: -moz-linear-gradient(top, hsla(0, 0%, 100%, 1.0), hsla(0, 0%, 100%, 0.5));
+        background-image: linear-gradient(to bottom, hsla(0, 0%, 100%, 1.0), hsla(0, 0%, 100%, 0.5));
+    }
+    .inner:before {
+        background-image: -webkit-linear-gradient(top, hsla(0, 0%, 100%, 0.5), hsla(0, 0%, 75%, 0.5));
+        background-image: -moz-linear-gradient(top, hsla(0, 0%, 100%, 0.5), hsla(0, 0%, 75%, 0.5));
+        background-image: linear-gradient(to bottom, hsla(0, 0%, 100%, 0.5), hsla(0, 0%, 75%, 0.5));
+    }
+    .inner:after {
+        background-image: -webkit-linear-gradient(top, hsla(0, 0%, 50%, 0.5), hsla(0, 0%, 75%, 0.5));
+        background-image: -moz-linear-gradient(top, hsla(0, 0%, 50%, 0.5), hsla(0, 0%, 75%, 0.5));
+        background-image: linear-gradient(to bottom, hsla(0, 0%, 50%, 0.5), hsla(0, 0%, 75%, 0.5));
+    }
+    /* Spinning animations */
+    @keyframes rotate-outer {
+        0% { transform: rotate(0deg); -moz-transform: rotate(0deg); -webkit-transform: rotate(0deg); }
+        100% { transform: rotate(1080deg); -moz-transform: rotate(1080deg); -webkit-transform: rotate(1080deg); }
+    }
+    @-webkit-keyframes rotate-outer {
+        0% { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(1080deg); }
+    }
+    @keyframes rotate-inner {
+        0% { transform: rotate(720deg); -moz-transform: rotate(720deg); -webkit-transform: rotate(720deg); }
+        100% { transform: rotate(0deg); -moz-transform: rotate(0deg); -webkit-transform: rotate(0deg); }
+    }
+    @-webkit-keyframes rotate-inner {
+        0% { -webkit-transform: rotate(720deg); } 100% { -webkit-transform: rotate(0deg); }
+    }
+
+</style>
+
+<body class="idle">
+<header>
+    <h1 id="title">Audiour</h1>
+    <h2 id="subtitle">Select a file to start</h2>
+</header>
+
+<audio id="player" controls>
+    <source type='audio/mpeg' />
+</audio>
+
+<div class="loading-overlay">
+    <div class="loading">
+        <div class="outer"></div>
+        <div class="inner"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+<script type="text/javascript">
+
+	var appId = 'af2828a5-5a82-4be6-960a-2171287aed09';	
+
+	var receiver = new cast.receiver.Receiver(appId, [cast.receiver.RemoteMedia.NAMESPACE], "", 5);
+	var remoteMedia = new cast.receiver.RemoteMedia();
+
+    remoteMedia.addChannelFactory(receiver.createChannelFactory(cast.receiver.RemoteMedia.NAMESPACE));	
+	receiver.start();
+
+	window.addEventListener('load', function() {
+
+		var player = document.getElementById('player');
+		remoteMedia.setMediaElement(player);		
+		
+		player && player.addEventListener("loadedmetadata", function(){						
+			var title = remoteMedia.getTitle()
+			var info = remoteMedia.getContentInfo();
+			player.style.display = 'inline-block';
+			document.getElementById('subtitle').innerText = title;	
+			document.body.className = 'audiour';
+		});
+
+		setTimeout(function(){
+			document.body.className = 'audiour';
+		}, 500)
+    });
+	
+</script>	
