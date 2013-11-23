@@ -10,10 +10,16 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
+import uk.co.senab.actionbarpulltorefresh.library.ActionBarPullToRefresh;
+import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
+import uk.co.senab.actionbarpulltorefresh.library.listeners.OnRefreshListener;
+
 /**
  * Created by nathan on 11/17/13.
  */
-public class AudiourMediaListFragment extends Fragment {
+public class AudiourMediaListFragment extends Fragment implements OnRefreshListener  {
+
+    private PullToRefreshLayout mPullToRefreshLayout;
 
     private static final String ARG_MENU_POSITION = "menu_position";
 
@@ -34,6 +40,20 @@ public class AudiourMediaListFragment extends Fragment {
     }
 
     @Override
+    public void onViewCreated(View view, Bundle savedInstanceState){
+        super.onViewCreated(view,savedInstanceState);
+        ViewGroup viewGroup = (ViewGroup) view;
+
+        mPullToRefreshLayout = new PullToRefreshLayout(viewGroup.getContext());
+
+        ActionBarPullToRefresh.from(getActivity())
+                .insertLayoutInto(viewGroup)
+                .allChildrenArePullable()
+                .listener(this)
+                .setup(mPullToRefreshLayout);
+    }
+
+    @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         ((MainActivity) activity).onSectionAttached(getArguments().getInt(ARG_MENU_POSITION));
@@ -45,4 +65,8 @@ public class AudiourMediaListFragment extends Fragment {
         ((MainActivity) getActivity()).onSectionStarted(getArguments().getInt(ARG_MENU_POSITION));
     }
 
+    @Override
+    public void onRefreshStarted(View view) {
+        ((MainActivity) getActivity()).onRefreshStarted(mPullToRefreshLayout);
+    }
 }

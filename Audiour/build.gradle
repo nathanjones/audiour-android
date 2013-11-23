@@ -23,8 +23,10 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:+"
-    compile "com.android.support:appcompat-v7:18.0.+"
-    compile "com.android.support:mediarouter-v7:18.0.+"
+    compile 'com.github.chrisbanes.actionbarpulltorefresh:library:+'
+    compile 'com.android.support:support-v4:+'
+    compile 'com.android.support:appcompat-v7:18.0.+'
+    compile 'com.android.support:mediarouter-v7:18.0.+'
     compile files('libs/GoogleCastSdkAndroid-1.0.6.jar')
+    compile files('libs/GoogleAnalyticsServices.jar')
 }

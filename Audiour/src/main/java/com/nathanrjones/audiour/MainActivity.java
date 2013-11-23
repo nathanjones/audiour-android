@@ -41,6 +41,8 @@ import java.util.List;
 
 import com.google.analytics.tracking.android.EasyTracker;
 
+import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
+
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
 public class MainActivity extends FragmentActivity
@@ -57,7 +59,9 @@ public class MainActivity extends FragmentActivity
     private ImageButton mStopButton;
 
     private ProgressBar mProgressBar;
+    private PullToRefreshLayout mPullToRefreshLayout;
 
+    private int mCurrentPosition;
     private static final int POSITION_FEATURED = 0;
     private static final int POSITION_TRENDING = 1;
     private static final int POSITION_RANDOM = 2;
@@ -68,10 +72,11 @@ public class MainActivity extends FragmentActivity
     private static final String TAG_TITLE = "Title";
     private static final String TAG_URL = "Mp3Url";
 
-    List<AudiourMedia> mFeaturedList = new ArrayList<AudiourMedia>();
-    List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
-    List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
-    List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
+    private List<AudiourMedia> mCurrentList;
+    private List<AudiourMedia> mFeaturedList = new ArrayList<AudiourMedia>();
+    private List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
+    private List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
+    private List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
 
     private static final String URL_FEATURED = "http://audiour.com/Featured";
     private static final String URL_POPULAR = "http://audiour.com/Popular";
@@ -189,19 +194,19 @@ public class MainActivity extends FragmentActivity
 
     @Override
     protected void onStop() {
+        super.onStop();
         EasyTracker.getInstance(this).activityStop(this);
     }
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
 
         mNotifyManager.cancel(mNotifyId);
 
         mAudiourMediaRouteAdapter.cleanup();
 
         unregisterReceiver(mIntentReceiver);
-
-        super.onDestroy();
     }
 
     @Override
@@ -232,6 +237,8 @@ public class MainActivity extends FragmentActivity
     }
 
     public void onSectionStarted(int number){
+        mCurrentPosition = number;
+
         final List<AudiourMedia> mediaList;
 
         switch (number) {
@@ -251,6 +258,8 @@ public class MainActivity extends FragmentActivity
                 mediaList = new ArrayList<AudiourMedia>();
                 break;
         }
+
+        mCurrentList = mediaList;
 
         if (mediaList.size() == 0) {
             populateAudiourMediaList(number, mediaList);
@@ -273,6 +282,14 @@ public class MainActivity extends FragmentActivity
                 });
             }
         }
+    }
+
+    public void onRefreshStarted(PullToRefreshLayout layout) {
+        mPullToRefreshLayout = layout;
+
+        mCurrentList = new ArrayList<AudiourMedia>();
+
+        populateAudiourMediaList(mCurrentPosition, mCurrentList);
     }
 
     public void buildAppNotification() {
@@ -544,6 +561,10 @@ public class MainActivity extends FragmentActivity
             }
 
             if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
+
+            if (mPullToRefreshLayout != null && mPullToRefreshLayout.isRefreshing()){
+                mPullToRefreshLayout.setRefreshComplete();
+            }
 
             final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
 

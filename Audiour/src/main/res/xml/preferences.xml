@@ -45,7 +45,7 @@
 
         <Preference
             android:title="Version"
-            android:summary="0.1"/>
+            android:summary="0.3"/>
 
         </PreferenceCategory>
 
