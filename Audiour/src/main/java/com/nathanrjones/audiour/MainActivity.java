@@ -377,12 +377,6 @@ public class MainActivity extends FragmentActivity
             case R.id.action_search:
                 onShowSearchDialog();
                 break;
-            case R.id.action_about:
-                final Dialog dialog = new Dialog(MainActivity.this);
-                dialog.setContentView(R.layout.fragment_about);
-                dialog.setTitle("About Audiour Beta");
-                dialog.show();
-                break;
         }
         return super.onOptionsItemSelected(item);
     }
