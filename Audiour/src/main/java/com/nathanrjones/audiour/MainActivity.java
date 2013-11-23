@@ -39,6 +39,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.analytics.tracking.android.EasyTracker;
+
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
 public class MainActivity extends FragmentActivity
@@ -179,9 +181,15 @@ public class MainActivity extends FragmentActivity
                 task.execute("http://audiour.com/" + id);
 
             }
-
-
         }
+
+        EasyTracker.getInstance(this).activityStart(this);
+
+    }
+
+    @Override
+    protected void onStop() {
+        EasyTracker.getInstance(this).activityStop(this);
     }
 
     @Override
