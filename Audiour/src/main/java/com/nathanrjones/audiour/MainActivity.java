@@ -31,6 +31,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -537,6 +538,17 @@ public class MainActivity extends FragmentActivity
 
         protected void onPostExecute(JSONArray results) {
 
+            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
+
+            if (mPullToRefreshLayout != null && mPullToRefreshLayout.isRefreshing()){
+                mPullToRefreshLayout.setRefreshComplete();
+            }
+
+            if (results == null) {
+                Toast.makeText(MainActivity.this, "Could not load files", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             try {
                 for(int i=0;i<results.length();i++)
                 {
@@ -552,12 +564,6 @@ public class MainActivity extends FragmentActivity
 
             } catch (JSONException e) {
                 e.printStackTrace();
-            }
-
-            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
-
-            if (mPullToRefreshLayout != null && mPullToRefreshLayout.isRefreshing()){
-                mPullToRefreshLayout.setRefreshComplete();
             }
 
             final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
