@@ -141,6 +141,8 @@ public class MainActivity extends FragmentActivity
     protected void onStart() {
         super.onStart();
 
+        mAudiourMediaRouteAdapter.setMediaRouterCallback();
+
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -197,6 +199,7 @@ public class MainActivity extends FragmentActivity
     protected void onStop() {
         super.onStop();
         EasyTracker.getInstance(this).activityStop(this);
+        mAudiourMediaRouteAdapter.removeMediaRouterCallback();
     }
 
     @Override
@@ -356,7 +359,9 @@ public class MainActivity extends FragmentActivity
             getMenuInflater().inflate( R.menu.main, menu );
 
             MenuItem mediaRouteItem = menu.findItem( R.id.action_cast );
+
             mMediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
+            mMediaRouteButton.setVisibility(View.GONE);
             mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mMediaRouteButton);
 
             restoreActionBar();

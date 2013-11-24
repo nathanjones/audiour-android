@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.MediaRouteButton;
 import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.cast.ApplicationChannel;
@@ -83,13 +84,34 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
         mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
         mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
 
-        mMediaRouterCallback = new MediaRouterCallback();
-        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
+        Thread myThread = null;
+        Runnable runnable = new StatusRunner();
+        myThread = new Thread(runnable);
+        //logVIfEnabled(TAG, "Starting statusRunner thread");
+        myThread.start();
+
+    }
+
+    public void setMediaRouterCallback(){
+        if (mMediaRouterCallback == null ) mMediaRouterCallback = new MediaRouterCallback();
+
+        if (mMediaRouter != null && mMediaRouteSelector != null){
+            mMediaRouter.addCallback(
+                    mMediaRouteSelector,
+                    mMediaRouterCallback,
+                    MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY
+            );
+        }
+    }
+
+    public void removeMediaRouterCallback(){
+        mMediaRouter.removeCallback(mMediaRouterCallback);
     }
 
     public void setMediaRouteButtonSelector(MediaRouteButton mediaRouteButton) {
         mMediaRouteButton = mediaRouteButton;
         mMediaRouteButton.setRouteSelector(mMediaRouteSelector);
+        //setMediaRouteButtonVisible();
     }
 
     private class MediaRouterCallback extends MediaRouter.Callback {
@@ -282,6 +304,38 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
             });
 
             mMediaPlayer.prepareAsync();
+        }
+    }
+
+    public void updateStatus() {
+        ((MainActivity) mContext).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    setMediaRouteButtonVisible();
+                } catch (Exception e) {
+                    //Log.e(TAG, "Status request failed: " + e);
+                }
+            }
+        });
+    }
+
+    protected final void setMediaRouteButtonVisible() {
+        mMediaRouteButton.setVisibility(
+                mMediaRouter.isRouteAvailable(mMediaRouteSelector, 0) ? View.VISIBLE : View.GONE);
+    }
+
+    private class StatusRunner implements Runnable {
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    updateStatus();
+                    Thread.sleep(1500);
+                } catch (Exception e) {
+                    //Log.e(TAG, "Thread interrupted: " + e);
+                }
+            }
         }
     }
 
