@@ -13,6 +13,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -348,6 +351,12 @@ public class MainActivity extends FragmentActivity
         actionBar.setNavigationMode(NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
+
+        Drawable colorDrawable = new ColorDrawable(getResources().getColor(R.color.gray));
+        Drawable bottomDrawable = getResources().getDrawable(R.drawable.actionbar_bottom);
+        LayerDrawable layer = new LayerDrawable(new Drawable[] { colorDrawable, bottomDrawable });
+
+        actionBar.setBackgroundDrawable(layer);
     }
 
 
