@@ -3,7 +3,8 @@
     <!-- Base application theme. -->
     <style name="Audiour" parent="android:Theme.Holo.Light.DarkActionBar">
         <item name="android:actionBarStyle">@style/Audiour.ActionBar</item>
-        <item name="android:dialogTheme">@style/DarkDialog</item>
+        <item name="android:dialogTheme">@style/Audiour.Dialog</item>
+        <item name="ptrHeaderStyle">@style/Audiour.PtrHeader</item>
     </style>
 
     <!-- ActionBar styles -->
@@ -11,10 +12,13 @@
         <item name="android:background">#605f59</item>
     </style>
 
-    <style name="DarkDialog" parent="android:Theme.Holo.Dialog">
+    <style name="Audiour.Dialog" parent="android:Theme.Holo.Dialog">
         <item name="android:textColor">#FFF</item>
         <item name="android:background">@color/gray</item>
-        <item name="android:weekSeparatorLineColor">#FF0000</item>
     </style>
 
+
+    <style name="Audiour.PtrHeader" parent="android:Widget">
+        <item name="ptrProgressBarColor">@color/orange</item>
+    </style>
 </resources>
