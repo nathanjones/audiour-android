@@ -6,11 +6,17 @@
         android:actionViewClass="android.support.v7.app.MediaRouteButton"
         android:showAsAction="always"/>
 
+    <item android:id="@+id/action_share"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_share"
+        android:visible="false"
+        android:actionProviderClass="android.widget.ShareActionProvider" />
+
     <item android:id="@+id/action_search"
         android:title="@string/action_search"
         android:icon="@android:drawable/ic_menu_search"
         android:orderInCategory="100"
-        android:showAsAction="ifRoom" />
+        android:showAsAction="never" />
 
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"

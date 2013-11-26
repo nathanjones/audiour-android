@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.MediaRouteButton;
 import android.view.Menu;
@@ -33,6 +34,7 @@ import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,6 +64,9 @@ public class MainActivity extends FragmentActivity
     private ImageButton mPauseButton;
     private ImageButton mStopButton;
 
+    private MenuItem mShareItem;
+    private ShareActionProvider mShareActionProvider;
+
     private ProgressBar mProgressBar;
     private PullToRefreshLayout mPullToRefreshLayout;
 
@@ -74,7 +79,8 @@ public class MainActivity extends FragmentActivity
     // JSON Node names
     private static final String TAG_ID = "AudioFileId";
     private static final String TAG_TITLE = "Title";
-    private static final String TAG_URL = "Mp3Url";
+    private static final String TAG_URL = "Url";
+    private static final String TAG_MP3_URL = "Mp3Url";
 
     private List<AudiourMedia> mCurrentList;
     private List<AudiourMedia> mFeaturedList = new ArrayList<AudiourMedia>();
@@ -367,11 +373,14 @@ public class MainActivity extends FragmentActivity
 
             getMenuInflater().inflate( R.menu.main, menu );
 
-            MenuItem mediaRouteItem = menu.findItem( R.id.action_cast );
+            MenuItem mediaRouteItem = menu.findItem(R.id.action_cast);
 
             mMediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
             mMediaRouteButton.setVisibility(View.GONE);
             mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mMediaRouteButton);
+
+            mShareItem = menu.findItem(R.id.action_share);
+            mShareActionProvider = (ShareActionProvider) mShareItem.getActionProvider();
 
             restoreActionBar();
             return true;
@@ -391,6 +400,9 @@ public class MainActivity extends FragmentActivity
                 break;
             case R.id.action_search:
                 onShowSearchDialog();
+                break;
+            case R.id.action_share:
+
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -427,6 +439,12 @@ public class MainActivity extends FragmentActivity
         alert.show();
     }
 
+    private void setShareIntent(Intent shareIntent) {
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(shareIntent);
+        }
+    }
+
     public void onPlayClicked() {
         mAudiourMediaRouteAdapter.play();
 
@@ -446,6 +464,8 @@ public class MainActivity extends FragmentActivity
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         layout.setVisibility(View.GONE);
+
+        mShareItem.setVisible(false);
     }
 
     public void onMediaSelected(AudiourMedia selected){
@@ -470,6 +490,15 @@ public class MainActivity extends FragmentActivity
             mNotifyBuilder.setContentText(url);
             mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
         }
+
+        Intent shareIntent = ShareCompat.IntentBuilder.from(this)
+                .setType("text/plain")
+                .setText(selected.getUrl())
+                .getIntent();
+
+        setShareIntent(shareIntent);
+
+        mShareItem.setVisible(true);
     }
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
@@ -524,8 +553,9 @@ public class MainActivity extends FragmentActivity
                 String id = result.getString(TAG_ID);
                 String title = result.getString(TAG_TITLE);
                 String url = result.getString(TAG_URL);
+                String mp3Url = result.getString(TAG_MP3_URL);
 
-                onMediaSelected(new AudiourMedia(id, title, url));
+                onMediaSelected(new AudiourMedia(id, title, url, mp3Url));
 
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -572,8 +602,9 @@ public class MainActivity extends FragmentActivity
                     String id = file.getString(TAG_ID);
                     String title = file.getString(TAG_TITLE);
                     String url = file.getString(TAG_URL);
+                    String mp3Url = file.getString(TAG_MP3_URL);
 
-                    mAudiourMediaList.add(new AudiourMedia(id, title, url));
+                    mAudiourMediaList.add(new AudiourMedia(id, title, url, mp3Url));
                 }
 
             } catch (JSONException e) {

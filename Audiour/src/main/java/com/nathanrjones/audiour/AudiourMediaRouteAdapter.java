@@ -170,7 +170,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
                 channel.attachMessageStream(mMediaMessageStream);
 
                 if (mSelectedMedia != null) try {
-                    mMediaMessageStream.loadMedia(mSelectedMedia.getUrl(), mAudiourMeta, true);
+                    mMediaMessageStream.loadMedia(mSelectedMedia.getMp3Url(), mAudiourMeta, true);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -257,7 +257,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
 
         mSelectedMedia = selected;
 
-        String url = mSelectedMedia.getUrl();
+        String url = mSelectedMedia.getMp3Url();
         String title = mSelectedMedia.getTitle();
 
         mAudiourMeta.setTitle(title);
