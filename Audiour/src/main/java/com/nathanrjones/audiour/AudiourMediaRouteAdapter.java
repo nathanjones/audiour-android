@@ -283,11 +283,12 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
             try {
                 mMediaPlayer.setDataSource(url);
 
-                mProgressDialog = new ProgressDialog(mContext);
-                mProgressDialog.setMessage("Loading selected file...");
-                mProgressDialog.show();
-//                mPlayButton.setVisibility(View.GONE);
-//                mPauseButton.setVisibility(View.GONE);
+                if (!((Activity) mContext).isFinishing()) {
+                    mProgressDialog = new ProgressDialog(mContext);
+                    mProgressDialog.setMessage("Loading selected file...");
+                    mProgressDialog.show();
+                }
+
             } catch (IOException e) {
 //                mProgressBar.setVisibility(View.GONE);
                 e.printStackTrace();
