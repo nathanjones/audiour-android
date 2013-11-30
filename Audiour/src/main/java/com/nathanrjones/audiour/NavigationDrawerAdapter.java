@@ -8,10 +8,6 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-/**
- * Created by nathan on 11/23/13.
- */
-
 public class NavigationDrawerAdapter extends ArrayAdapter<String> {
 
     int mResource;

@@ -7,16 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import uk.co.senab.actionbarpulltorefresh.library.ActionBarPullToRefresh;
 import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 import uk.co.senab.actionbarpulltorefresh.library.listeners.OnRefreshListener;
 
-/**
- * Created by nathan on 11/17/13.
- */
 public class AudiourMediaListFragment extends Fragment implements OnRefreshListener  {
 
     private PullToRefreshLayout mPullToRefreshLayout;
@@ -56,17 +50,24 @@ public class AudiourMediaListFragment extends Fragment implements OnRefreshListe
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        ((MainActivity) activity).onSectionAttached(getArguments().getInt(ARG_MENU_POSITION));
+        int position = getArguments() != null ? getArguments().getInt(ARG_MENU_POSITION) : 0;
+
+        ((MainActivity) activity).onSectionAttached(position);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        ((MainActivity) getActivity()).onSectionStarted(getArguments().getInt(ARG_MENU_POSITION));
+
+        MainActivity activity = (MainActivity) getActivity();
+        int position = getArguments() != null ? getArguments().getInt(ARG_MENU_POSITION) : 0;
+
+        if (activity != null) activity.onSectionStarted(position);
     }
 
     @Override
     public void onRefreshStarted(View view) {
-        ((MainActivity) getActivity()).onRefreshStarted(mPullToRefreshLayout);
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) activity.onRefreshStarted(mPullToRefreshLayout);
     }
 }

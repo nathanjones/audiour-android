@@ -2,7 +2,6 @@ package com.nathanrjones.audiour;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.FragmentManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -38,15 +37,15 @@ import android.widget.ShareActionProvider;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.analytics.tracking.android.EasyTracker;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.analytics.tracking.android.EasyTracker;
-import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 
@@ -56,10 +55,9 @@ public class MainActivity extends FragmentActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     private NavigationDrawerFragment mNavigationDrawerFragment;
-    private CharSequence mTitle;
+    private CharSequence mTitle = getTitle();
 
     private AudiourMediaRouteAdapter mAudiourMediaRouteAdapter;
-    private MediaRouteButton mMediaRouteButton;
 
     private ImageButton mPlayButton;
     private ImageButton mPauseButton;
@@ -121,7 +119,6 @@ public class MainActivity extends FragmentActivity
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
 
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
@@ -131,7 +128,7 @@ public class MainActivity extends FragmentActivity
         mPauseButton = (ImageButton) findViewById(R.id.pause_button);
         mStopButton = (ImageButton) findViewById(R.id.stop_button);
 
-        SlidingUpPanelLayout layout = null;
+        SlidingUpPanelLayout layout;
 
         layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
 
@@ -340,12 +337,15 @@ public class MainActivity extends FragmentActivity
             text = mSelectedMedia.getId();
         }
 
-        mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
-            .setSmallIcon(R.drawable.ic_chromecast_off)
-            .setLargeIcon((((BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher)).getBitmap()))
-            .setPriority(Notification.PRIORITY_HIGH)
-            .setContentTitle(title)
-            .setContentText(text);
+
+            mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
+                .setSmallIcon(R.drawable.ic_chromecast_off)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setContentTitle(title)
+                .setContentText(text);
+
+        BitmapDrawable bitmapIcon = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher);
+        if (bitmapIcon  != null) mNotifyBuilder.setLargeIcon(bitmapIcon.getBitmap());
 
         Intent resultIntent = new Intent(MainActivity.this, MainActivity.class);
         PendingIntent resultPendingIntent = PendingIntent.getActivity(
@@ -398,12 +398,18 @@ public class MainActivity extends FragmentActivity
 
             MenuItem mediaRouteItem = menu.findItem(R.id.action_cast);
 
-            mMediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
-            mMediaRouteButton.setVisibility(View.GONE);
-            mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mMediaRouteButton);
+            if (mediaRouteItem == null) return false;
+
+            MediaRouteButton mediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
+
+            if (mediaRouteButton != null){
+                mediaRouteButton.setVisibility(View.GONE);
+                mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mediaRouteButton);
+            }
 
             mShareItem = menu.findItem(R.id.action_share);
-            mShareActionProvider = (ShareActionProvider) mShareItem.getActionProvider();
+            mShareActionProvider = (ShareActionProvider)
+                    (mShareItem != null ? mShareItem.getActionProvider() : null);
 
             restoreActionBar();
             return true;
@@ -443,21 +449,18 @@ public class MainActivity extends FragmentActivity
 
         alert.setPositiveButton("Open", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
-                String value = input.getText().toString();
+                String value = input.getText() != null ? input.getText().toString() : "";
 
                 if (!value.isEmpty()){
                     RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
                     task.execute("http://audiour.com/" + value);
                 }
-
-                return;
             }
         });
 
         alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 
             public void onClick(DialogInterface dialog, int which) {
-                return;
             }
         });
 
@@ -548,7 +551,6 @@ public class MainActivity extends FragmentActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            String cmd = intent.getStringExtra("command");
 
             if (PLAY_ACTION.equals(action)) {
                 onPlayClicked();

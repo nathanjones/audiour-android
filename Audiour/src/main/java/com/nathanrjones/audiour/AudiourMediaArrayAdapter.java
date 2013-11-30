@@ -10,9 +10,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * Created by nathan on 11/10/13.
- */
 public class AudiourMediaArrayAdapter extends ArrayAdapter<AudiourMedia> {
 
     int mResource;

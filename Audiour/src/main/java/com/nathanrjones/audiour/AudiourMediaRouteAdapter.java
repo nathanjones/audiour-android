@@ -50,7 +50,6 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
 
     private ProgressDialog mProgressDialog;
 
-    private String mAppName;
     private static final String NRJ_APP_NAME = "af2828a5-5a82-4be6-960a-2171287aed09";
 
     private static AudiourMediaRouteAdapter instance = null;
@@ -71,7 +70,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
         MediaRouteHelper.registerMinimalMediaRouteProvider(mCastContext, this);
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
+        String mAppName = prefs.getString("pref_app_name", NRJ_APP_NAME);
 
 
         mMediaRouteSelector = MediaRouteHelper.buildMediaRouteSelector(
@@ -84,7 +83,7 @@ public class AudiourMediaRouteAdapter implements MediaRouteAdapter {
         mAudiourMeta.setTitle("Audiour - Share Audio, Simply");
         mAudiourMeta.setImageUrl(Uri.parse("http://audiour.com/favicon.ico"));
 
-        Thread myThread = null;
+        Thread myThread;
         Runnable runnable = new StatusRunner();
         myThread = new Thread(runnable);
         //logVIfEnabled(TAG, "Starting statusRunner thread");
