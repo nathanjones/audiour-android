@@ -586,7 +586,7 @@ public class MainActivity extends FragmentActivity
             mUrl = params[0];
 
             JSONParser parser = new JSONParser();
-            return parser.getJSONFromUrl(mUrl);
+            return parser.getObject(mUrl);
         }
 
         protected void onPostExecute(JSONObject result) {
@@ -620,7 +620,7 @@ public class MainActivity extends FragmentActivity
             mAudiourMediaList = params[0].getList();
 
             JSONParser parser = new JSONParser();
-            return parser.getJSONArrayFromUrl(mUrl);
+            return parser.getArray(mUrl);
         }
 
         protected void onPostExecute(JSONArray results) {
