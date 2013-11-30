@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Audiour Beta</string>
-    <string name="app_version">0.4</string>
+    <string name="app_version">0.4.3</string>
     <string name="default_app_name">af2828a5-5a82-4be6-960a-2171287aed09</string>
 
     <!-- Titles -->
