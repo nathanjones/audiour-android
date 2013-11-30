@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.analytics.tracking.android.EasyTracker;
+import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 
@@ -88,10 +89,11 @@ public class MainActivity extends FragmentActivity
     private List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
     private List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
 
-    private static final String URL_FEATURED = "http://audiour.com/Featured";
-    private static final String URL_POPULAR = "http://audiour.com/Popular";
-    private static final String URL_RANDOM = "http://audiour.com/Random";
-    private static final String URL_RECENT = "http://audiour.com/Recent";
+    private static final String URL_BASE = "http://api.audiour.com";
+    private static final String URL_FEATURED = URL_BASE + "/Featured";
+    private static final String URL_POPULAR = URL_BASE + "/Popular";
+    private static final String URL_RANDOM = URL_BASE + "/Random";
+    private static final String URL_RECENT = URL_BASE + "/Recent";
 
     public static final String PLAY_ACTION = "com.nathanrjones.audiour.playbackcommand.play";
     public static final String PAUSE_ACTION = "com.nathanrjones.audiour.playbackcommand.pause";
@@ -103,6 +105,7 @@ public class MainActivity extends FragmentActivity
     private NotificationManager mNotifyManager;
     private NotificationCompat.Builder mNotifyBuilder;
 
+    private MixpanelAPI mMixpanel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,6 +147,9 @@ public class MainActivity extends FragmentActivity
     
         buildAppNotification();
 
+        String mixpanelToken = getResources().getString(R.string.mixpanel_token);
+        mMixpanel = MixpanelAPI.getInstance(this, mixpanelToken);
+
     }
 
     @Override
@@ -180,6 +186,14 @@ public class MainActivity extends FragmentActivity
             Uri data = intent.getData();
             if (data == null) return;
 
+            JSONObject props = new JSONObject();
+            try {
+                props.put("Intent URL", data);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            mMixpanel.track("Started via Intent", props);
+
             List<String> segments = data.getPathSegments();
             if (segments == null) return;
             if (segments.isEmpty()) return;
@@ -213,13 +227,16 @@ public class MainActivity extends FragmentActivity
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
 
         mNotifyManager.cancel(mNotifyId);
 
         mAudiourMediaRouteAdapter.cleanup();
 
         unregisterReceiver(mIntentReceiver);
+
+        mMixpanel.flush();
+
+        super.onDestroy();
     }
 
     @Override
@@ -257,15 +274,19 @@ public class MainActivity extends FragmentActivity
         switch (number) {
             case POSITION_FEATURED:
                 mediaList = mFeaturedList;
+                mMixpanel.track("Viewed Featured List", new JSONObject());
                 break;
             case POSITION_TRENDING:
                 mediaList = mPopularList;
+                mMixpanel.track("Viewed Trending List", new JSONObject());
                 break;
             case POSITION_RANDOM:
                 mediaList = mRandomList;
+                mMixpanel.track("Viewed Random List", new JSONObject());
                 break;
             case POSITION_RECENTS:
                 mediaList = mRecentList;
+                mMixpanel.track("Viewed Recents List", new JSONObject());
                 break;
             default:
                 mediaList = new ArrayList<AudiourMedia>();
@@ -301,6 +322,8 @@ public class MainActivity extends FragmentActivity
         mPullToRefreshLayout = layout;
 
         mCurrentList = new ArrayList<AudiourMedia>();
+
+        mMixpanel.track("Pulled to Refresh", new JSONObject());
 
         populateAudiourMediaList(mCurrentPosition, mCurrentList);
     }
@@ -394,15 +417,17 @@ public class MainActivity extends FragmentActivity
 
         switch (item.getItemId()) {
             case R.id.action_settings:
+                mMixpanel.track("Opened Settings", new JSONObject());
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, SettingsActivity.class);
                 startActivityForResult(intent, 0);
                 break;
             case R.id.action_search:
+                mMixpanel.track("Opened Search Dialog", new JSONObject());
                 onShowSearchDialog();
                 break;
             case R.id.action_share:
-
+                mMixpanel.track("Opened Share Dialog", new JSONObject());
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -450,6 +475,8 @@ public class MainActivity extends FragmentActivity
 
         mPlayButton.setVisibility(View.GONE);
         mPauseButton.setVisibility(View.VISIBLE);
+
+        mMixpanel.track("Clicked Play", new JSONObject());
     }
 
     public void onPauseClicked() {
@@ -457,6 +484,8 @@ public class MainActivity extends FragmentActivity
 
         mPauseButton.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
+
+        mMixpanel.track("Clicked Pause", new JSONObject());
     }
 
     public void onStopClicked() {
@@ -466,9 +495,13 @@ public class MainActivity extends FragmentActivity
         layout.setVisibility(View.GONE);
 
         mShareItem.setVisible(false);
+
+        mMixpanel.track("Clicked Stop", new JSONObject());
     }
 
     public void onMediaSelected(AudiourMedia selected){
+        if (selected == null) return;
+
         mAudiourMediaRouteAdapter.setSelectedMedia(selected);
 
         mSelectedMedia = selected;
@@ -479,8 +512,8 @@ public class MainActivity extends FragmentActivity
         TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
         if (selectedMediaText != null) selectedMediaText.setText(title);
 
-        mPauseButton.setVisibility(View.VISIBLE);
-        mPlayButton.setVisibility(View.GONE);
+        if (mPauseButton != null) mPauseButton.setVisibility(View.VISIBLE);
+        if (mPlayButton != null) mPlayButton.setVisibility(View.GONE);
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         if (layout != null) layout.setVisibility(View.VISIBLE);
@@ -491,6 +524,16 @@ public class MainActivity extends FragmentActivity
             mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
         }
 
+        JSONObject props = new JSONObject();
+        try {
+            props.put("Selected Title", title);
+            props.put("Selected URL", url);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        mMixpanel.track("Selected File", props);
+
         Intent shareIntent = ShareCompat.IntentBuilder.from(this)
                 .setType("text/plain")
                 .setText(selected.getUrl())
@@ -498,7 +541,7 @@ public class MainActivity extends FragmentActivity
 
         setShareIntent(shareIntent);
 
-        mShareItem.setVisible(true);
+        if (mShareItem != null) mShareItem.setVisible(true);
     }
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
@@ -611,7 +654,7 @@ public class MainActivity extends FragmentActivity
                 e.printStackTrace();
             }
 
-            final ListView popularFilesListView = (ListView) findViewById(android.R.id.list);
+            final ListView listView = (ListView) findViewById(android.R.id.list);
 
             final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
@@ -619,14 +662,16 @@ public class MainActivity extends FragmentActivity
                     mAudiourMediaList
             );
 
-            popularFilesListView.setAdapter(listAdapter);
+            if (listView != null){
+                listView.setAdapter(listAdapter);
 
-            popularFilesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    onMediaSelected(mAudiourMediaList.get(position));
-                }
-            });
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        onMediaSelected(mAudiourMediaList.get(position));
+                    }
+                });
+            }
         }
     }
 

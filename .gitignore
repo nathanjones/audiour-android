@@ -32,3 +32,5 @@ local.properties
 *~
 *.bin
 *.swp
+
+Audiour/src/main/res/values/secure.xml
