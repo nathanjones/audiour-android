@@ -32,6 +32,41 @@
         android:key="about_category">
 
         <Preference
+            android:key="pref_share_app"
+            android:title="@string/pref_share_app"
+            android:summary="@string/pref_share_app_summary"/>
+
+        <PreferenceScreen
+            android:title="@string/pref_rate_app"
+            android:summary="@string/pref_rate_app_summary">
+
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/app_store_url" />
+
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:title="@string/pref_donate_bitcoins"
+            android:summary="@string/pref_donate_summary">
+
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_donate_bitcoins_url" />
+
+        </PreferenceScreen>
+
+        <PreferenceScreen
+            android:title="@string/pref_send_feedback"
+            android:summary="@string/pref_send_feedback_summary">
+
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/pref_send_feedback_url" />
+
+        </PreferenceScreen>
+
+        <Preference
             android:title="Version"
             android:summary="@string/app_version"/>
 
