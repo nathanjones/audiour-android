@@ -17,3 +17,7 @@ Setup Instructions
 
 1. Set your Application ID by either changing 'YOUR_APP_ID' in strings.xml or entering it manually from the Settings menu.
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/nathanjones/audiour-android/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
