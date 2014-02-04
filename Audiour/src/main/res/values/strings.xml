@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">Audiour Beta</string>
-    <string name="app_version">0.4.3</string>
+    <string name="app_version">0.4.4</string>
     <string name="app_store_url">https://play.google.com/store/apps/details?id=com.nathanrjones.audiour</string>
     <string name="default_app_name">af2828a5-5a82-4be6-960a-2171287aed09</string>
 
@@ -35,13 +35,14 @@
     <string name="pref_receiver_setup_url">https://github.com/nathanjones/audiour-android/blob/master/README.md#setup-instructions</string>
     <string name="pref_share_app">Share with Friends!</string>
     <string name="pref_share_app_summary">Let others know about this app.</string>
+    <string name="pref_rate_app">Rate Application</string>
+    <string name="pref_rate_app_summary">Rate this ★★★★★ on Google Play</string>
     <string name="pref_send_feedback">Send Feedback</string>
     <string name="pref_send_feedback_summary">Send your requests or issues</string>
     <string name="pref_send_feedback_url">mailto:audiour@nathanrjones.com</string>
-    <string name="pref_donate_bitcoins">Bitcoin Donations</string>
+    <string name="pref_donate_bitcoins">Donate with Bitcoins</string>
     <string name="pref_donate_summary">Support future development by donating.</string>
-    <string name="pref_donate_bitcoins_url">bitcoin:176mSAG6oaQfEmz89MU9QN83HuLBdX4PX9</string>
-
+    <string name="pref_donate_bitcoins_url" formatted="false">bitcoin:176mSAG6oaQfEmz89MU9QN83HuLBdX4PX9?amount=0.005&amp;label=Nathan&#37;20Jones&amp;message=Thanks!</string>
 
     <!-- Main Activity -->
     <string name="audiour_url_hint">Enter an Audiour URL</string>
@@ -50,7 +51,6 @@
     <string name="search_title">Open a File</string>
     <string name="search_prompt">To open any file, enter an Audiour File ID in the field below</string>
     <string name="action_share">Share</string>
-    <string name="pref_rate_app">Rate Application</string>
-    <string name="pref_rate_app_summary">Rate us ★★★★★ on Google Play</string>
+
 
 </resources>

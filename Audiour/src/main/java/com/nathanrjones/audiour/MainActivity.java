@@ -539,6 +539,7 @@ public class MainActivity extends FragmentActivity
 
         Intent shareIntent = ShareCompat.IntentBuilder.from(this)
                 .setType("text/plain")
+                .setSubject(selected.getTitle())
                 .setText(selected.getUrl())
                 .getIntent();
 
