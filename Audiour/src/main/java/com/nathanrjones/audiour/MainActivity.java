@@ -206,7 +206,7 @@ public class MainActivity extends FragmentActivity
             } else {
                 //onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
                 RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
-                task.execute("http://audiour.com/" + id);
+                task.execute(URL_BASE + "/" + id);
 
             }
         }
@@ -453,7 +453,7 @@ public class MainActivity extends FragmentActivity
 
                 if (!value.isEmpty()){
                     RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
-                    task.execute("http://audiour.com/" + value);
+                    task.execute(URL_BASE + "/" + value);
                 }
             }
         });
