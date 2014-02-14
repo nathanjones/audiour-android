@@ -21,8 +21,12 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.ShareCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.MediaRouteActionProvider;
 import android.support.v7.app.MediaRouteButton;
+import android.support.v7.media.MediaRouteSelector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +42,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.analytics.tracking.android.EasyTracker;
+import com.google.android.gms.cast.CastDevice;
+import com.google.android.gms.cast.CastMediaControlIntent;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 
 import org.json.JSONArray;
@@ -51,13 +57,18 @@ import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
-public class MainActivity extends FragmentActivity
+import android.support.v7.media.MediaRouter;
+
+public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private CharSequence mTitle = getTitle();
 
-    private AudiourMediaRouteAdapter mAudiourMediaRouteAdapter;
+    private MediaRouter mMediaRouter;
+    private MediaRouteSelector mMediaRouteSelector;
+    private CastDevice mSelectedDevice;
+    private MyMediaRouterCallback mMediaRouterCallback;
 
     private ImageButton mPlayButton;
     private ImageButton mPauseButton;
@@ -140,7 +151,13 @@ public class MainActivity extends FragmentActivity
             layout.setCoveredFadeColorEnabled(false);
         }
 
-        mAudiourMediaRouteAdapter = AudiourMediaRouteAdapter.getInstance(MainActivity.this);
+        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
+        mMediaRouteSelector = new MediaRouteSelector.Builder()
+                .addControlCategory(CastMediaControlIntent.categoryForCast("F6ADC45B")).build();
+
+        mMediaRouterCallback = new MyMediaRouterCallback();
+
+        //mAudiourMediaRouteAdapter = AudiourMediaRouteAdapter.getInstance(MainActivity.this);
     
         buildAppNotification();
 
@@ -150,10 +167,25 @@ public class MainActivity extends FragmentActivity
     }
 
     @Override
+    protected void onResume(){
+        super.onResume();
+        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
+                MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
+    }
+
+    @Override
+    protected void onPause() {
+        if (isFinishing()) {
+            mMediaRouter.removeCallback(mMediaRouterCallback);
+        }
+        super.onPause();
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
 
-        mAudiourMediaRouteAdapter.setMediaRouterCallback();
+        //mAudiourMediaRouteAdapter.setMediaRouterCallback();
 
         mPlayButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -219,7 +251,7 @@ public class MainActivity extends FragmentActivity
     protected void onStop() {
         super.onStop();
         EasyTracker.getInstance(this).activityStop(this);
-        mAudiourMediaRouteAdapter.removeMediaRouterCallback();
+        //mAudiourMediaRouteAdapter.removeMediaRouterCallback();
     }
 
     @Override
@@ -227,7 +259,7 @@ public class MainActivity extends FragmentActivity
 
         mNotifyManager.cancel(mNotifyId);
 
-        mAudiourMediaRouteAdapter.cleanup();
+        //mAudiourMediaRouteAdapter.cleanup();
 
         unregisterReceiver(mIntentReceiver);
 
@@ -396,16 +428,10 @@ public class MainActivity extends FragmentActivity
 
             getMenuInflater().inflate( R.menu.main, menu );
 
-            MenuItem mediaRouteItem = menu.findItem(R.id.action_cast);
-
-            if (mediaRouteItem == null) return false;
-
-            MediaRouteButton mediaRouteButton = (MediaRouteButton) mediaRouteItem.getActionView();
-
-            if (mediaRouteButton != null){
-                mediaRouteButton.setVisibility(View.GONE);
-                mAudiourMediaRouteAdapter.setMediaRouteButtonSelector(mediaRouteButton);
-            }
+            MenuItem mediaRouteMenuItem = menu.findItem(R.id.action_cast);
+            MediaRouteActionProvider mediaRouteActionProvider =
+                    (MediaRouteActionProvider) MenuItemCompat.getActionProvider(mediaRouteMenuItem);
+            mediaRouteActionProvider.setRouteSelector(mMediaRouteSelector);
 
             mShareItem = menu.findItem(R.id.action_share);
             mShareActionProvider = (ShareActionProvider)
@@ -474,7 +500,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void onPlayClicked() {
-        mAudiourMediaRouteAdapter.play();
+        //mAudiourMediaRouteAdapter.play();
 
         mPlayButton.setVisibility(View.GONE);
         mPauseButton.setVisibility(View.VISIBLE);
@@ -483,7 +509,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void onPauseClicked() {
-        mAudiourMediaRouteAdapter.pause();
+        //mAudiourMediaRouteAdapter.pause();
 
         mPauseButton.setVisibility(View.GONE);
         mPlayButton.setVisibility(View.VISIBLE);
@@ -492,7 +518,7 @@ public class MainActivity extends FragmentActivity
     }
 
     public void onStopClicked() {
-        mAudiourMediaRouteAdapter.stop();
+        //mAudiourMediaRouteAdapter.stop();
 
         LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
         layout.setVisibility(View.GONE);
@@ -505,7 +531,7 @@ public class MainActivity extends FragmentActivity
     public void onMediaSelected(AudiourMedia selected){
         if (selected == null) return;
 
-        mAudiourMediaRouteAdapter.setSelectedMedia(selected);
+        //mAudiourMediaRouteAdapter.setSelectedMedia(selected);
 
         mSelectedMedia = selected;
 
@@ -703,6 +729,20 @@ public class MainActivity extends FragmentActivity
         RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
         AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mediaList);
         task.execute(asyncTaskParams);
+    }
+
+    private class MyMediaRouterCallback extends MediaRouter.Callback {
+
+        @Override
+        public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo info) {
+            mSelectedDevice = CastDevice.getFromBundle(info.getExtras());
+            String routeId = info.getId();
+        }
+
+        @Override
+        public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo info) {
+            mSelectedDevice = null;
+        }
     }
 
 }
