@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="Audiour" parent="android:Theme.Holo.Light.DarkActionBar">
+    <style name="Audiour" parent="@style/Theme.AppCompat.Light.DarkActionBar">
         <item name="android:actionBarStyle">@style/Audiour.ActionBar</item>
         <item name="android:dialogTheme">@style/Audiour.Dialog</item>
         <item name="ptrHeaderStyle">@style/Audiour.PtrHeader</item>

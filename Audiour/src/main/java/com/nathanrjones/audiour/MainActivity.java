@@ -3,48 +3,46 @@ package com.nathanrjones.audiour;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.ShareCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.MediaRouteActionProvider;
-import android.support.v7.app.MediaRouteButton;
-import android.support.v7.media.MediaRouteSelector;
+import android.support.v7.media.MediaRouter;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ShareActionProvider;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.analytics.tracking.android.EasyTracker;
-import com.google.android.gms.cast.CastDevice;
-import com.google.android.gms.cast.CastMediaControlIntent;
+import com.google.android.gms.cast.MediaInfo;
+import com.google.android.gms.cast.MediaMetadata;
+import com.google.android.gms.common.images.WebImage;
+import com.google.sample.castcompanionlibrary.cast.BaseCastManager;
+import com.google.sample.castcompanionlibrary.cast.VideoCastManager;
+import com.google.sample.castcompanionlibrary.cast.callbacks.IVideoCastConsumer;
+import com.google.sample.castcompanionlibrary.cast.callbacks.VideoCastConsumerImpl;
+import com.google.sample.castcompanionlibrary.cast.exceptions.NoConnectionException;
+import com.google.sample.castcompanionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
+import com.google.sample.castcompanionlibrary.widgets.MiniController;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
+import com.nathanrjones.audiour.settings.CastPreference;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,22 +55,17 @@ import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
-import android.support.v7.media.MediaRouter;
-
 public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
+    private static final String TAG = "MainActivity";
     private NavigationDrawerFragment mNavigationDrawerFragment;
     private CharSequence mTitle = getTitle();
 
-    private MediaRouter mMediaRouter;
-    private MediaRouteSelector mMediaRouteSelector;
-    private CastDevice mSelectedDevice;
-    private MyMediaRouterCallback mMediaRouterCallback;
-
-    private ImageButton mPlayButton;
-    private ImageButton mPauseButton;
-    private ImageButton mStopButton;
+    private VideoCastManager mVideoCastManager;
+    private IVideoCastConsumer mCastConsumer;
+    private MiniController mMini;
+    private MenuItem mediaRouteMenuItem;
 
     private MenuItem mShareItem;
     private ShareActionProvider mShareActionProvider;
@@ -119,14 +112,10 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        BaseCastManager.checkGooglePlaySevices(this);
+
         setContentView(R.layout.activity_main);
-
-
-        IntentFilter commandFilter = new IntentFilter();
-        commandFilter.addAction(PLAY_ACTION);
-        commandFilter.addAction(PAUSE_ACTION);
-        commandFilter.addAction(STOP_ACTION);
-        registerReceiver(mIntentReceiver, commandFilter);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -135,31 +124,51 @@ public class MainActivity extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        mPlayButton = (ImageButton) findViewById(R.id.play_button);
-        mPauseButton = (ImageButton) findViewById(R.id.pause_button);
-        mStopButton = (ImageButton) findViewById(R.id.stop_button);
+        mVideoCastManager = AudiourApplication.getCastManager(this);
 
-        SlidingUpPanelLayout layout;
+        mMini = (MiniController) findViewById(R.id.miniController);
+        mVideoCastManager.addMiniController(mMini);
 
-        layout = (SlidingUpPanelLayout) findViewById(R.id.sliding_layout);
+        mVideoCastManager.reconnectSessionIfPossible(this, true);
 
-        if (layout != null){
-            layout.setShadowDrawable(getResources().getDrawable(R.drawable.above_shadow));
-            layout.setAnchorPoint(0.8f);
-            layout.setHardAnchorPoint(true);
-            layout.setEnableDragViewTouchEvents(true);
-            layout.setCoveredFadeColorEnabled(false);
-        }
+        mCastConsumer = new VideoCastConsumerImpl() {
 
-        mMediaRouter = MediaRouter.getInstance(getApplicationContext());
-        mMediaRouteSelector = new MediaRouteSelector.Builder()
-                .addControlCategory(CastMediaControlIntent.categoryForCast("F6ADC45B")).build();
+            @Override
+            public void onFailed(int resourceId, int statusCode) {
 
-        mMediaRouterCallback = new MyMediaRouterCallback();
+            }
 
-        //mAudiourMediaRouteAdapter = AudiourMediaRouteAdapter.getInstance(MainActivity.this);
-    
-        buildAppNotification();
+            @Override
+            public void onConnectionSuspended(int cause) {
+                Log.d(TAG, "onConnectionSuspended() was called with cause: " + cause);
+                com.nathanrjones.audiour.utils.Utils.
+                        showToast(MainActivity.this, R.string.connection_temp_lost);
+            }
+
+            @Override
+            public void onConnectivityRecovered() {
+                com.nathanrjones.audiour.utils.Utils.
+                        showToast(MainActivity.this, R.string.connection_recovered);
+            }
+
+            @Override
+            public void onCastDeviceDetected(final MediaRouter.RouteInfo info) {
+                if (!CastPreference.isFtuShown(MainActivity.this)) {
+                    CastPreference.setFtuShown(MainActivity.this);
+
+                    Log.d(TAG, "Route is visible: " + info);
+                    new Handler().postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            if (mediaRouteMenuItem != null && mediaRouteMenuItem.isVisible()) {
+                                Log.d(TAG, "Cast Icon is visible: " + info.getName());
+                            }
+                        }
+                    }, 1000);
+                }
+            }
+        };
 
         String mixpanelToken = getResources().getString(R.string.mixpanel_token);
         mMixpanel = MixpanelAPI.getInstance(this, mixpanelToken);
@@ -169,44 +178,26 @@ public class MainActivity extends ActionBarActivity
     @Override
     protected void onResume(){
         super.onResume();
-        mMediaRouter.addCallback(mMediaRouteSelector, mMediaRouterCallback,
-                MediaRouter.CALLBACK_FLAG_PERFORM_ACTIVE_SCAN);
+
+        mVideoCastManager = AudiourApplication.getCastManager(this);
+        if (null != mVideoCastManager) {
+            mVideoCastManager.addVideoCastConsumer(mCastConsumer);
+            mVideoCastManager.incrementUiCounter();
+        }
+
+        super.onResume();
     }
 
     @Override
     protected void onPause() {
-        if (isFinishing()) {
-            mMediaRouter.removeCallback(mMediaRouterCallback);
-        }
+        mVideoCastManager.decrementUiCounter();
+        mVideoCastManager.removeVideoCastConsumer(mCastConsumer);
         super.onPause();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
-        //mAudiourMediaRouteAdapter.setMediaRouterCallback();
-
-        mPlayButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onPlayClicked();
-            }
-        });
-
-        mPauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onPauseClicked();
-            }
-        });
-
-        mStopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onStopClicked();
-            }
-        });
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -236,10 +227,8 @@ public class MainActivity extends ActionBarActivity
             } else if (id.equals("recent")) {
                 onNavigationDrawerItemSelected(POSITION_RECENTS);
             } else {
-                //onMediaSelected(new AudiourMedia(id, "Shared Audiour File", data.toString() + ".mp3"));
                 RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
                 task.execute(URL_BASE + "/" + id);
-
             }
         }
 
@@ -251,17 +240,12 @@ public class MainActivity extends ActionBarActivity
     protected void onStop() {
         super.onStop();
         EasyTracker.getInstance(this).activityStop(this);
-        //mAudiourMediaRouteAdapter.removeMediaRouterCallback();
     }
 
     @Override
     protected void onDestroy() {
 
-        mNotifyManager.cancel(mNotifyId);
-
-        //mAudiourMediaRouteAdapter.cleanup();
-
-        unregisterReceiver(mIntentReceiver);
+        mVideoCastManager.removeMiniController(mMini);
 
         mMixpanel.flush();
 
@@ -357,55 +341,6 @@ public class MainActivity extends ActionBarActivity
         populateAudiourMediaList(mCurrentPosition, mCurrentList);
     }
 
-    public void buildAppNotification() {
-
-        mNotifyId = 1;
-
-        String title = "Audiour";
-        String text = "Share Audio, Simply.";
-
-        if (mSelectedMedia != null) {
-            title = mSelectedMedia.getTitle();
-            text = mSelectedMedia.getId();
-        }
-
-
-            mNotifyBuilder = new NotificationCompat.Builder(MainActivity.this)
-                .setSmallIcon(R.drawable.ic_chromecast_off)
-                .setPriority(Notification.PRIORITY_HIGH)
-                .setContentTitle(title)
-                .setContentText(text);
-
-        BitmapDrawable bitmapIcon = (BitmapDrawable) getResources().getDrawable(R.drawable.ic_launcher);
-        if (bitmapIcon  != null) mNotifyBuilder.setLargeIcon(bitmapIcon.getBitmap());
-
-        Intent resultIntent = new Intent(MainActivity.this, MainActivity.class);
-        PendingIntent resultPendingIntent = PendingIntent.getActivity(
-                MainActivity.this,
-                0,
-                resultIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
-        Intent playIntent = new Intent(PLAY_ACTION);
-        PendingIntent playPendingIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
-
-        Intent pauseIntent = new Intent(PAUSE_ACTION);
-        PendingIntent pausePendingIntent = PendingIntent.getBroadcast(this, 0, pauseIntent, 0);
-
-        Intent stopIntent = new Intent(STOP_ACTION);
-        PendingIntent stopPendingIntent = PendingIntent.getBroadcast(this, 0, stopIntent, 0);
-
-        mNotifyBuilder.setContentIntent(resultPendingIntent);
-        mNotifyBuilder.setDeleteIntent(stopPendingIntent);
-        mNotifyBuilder.addAction(android.R.drawable.ic_media_play ,"Play", playPendingIntent);
-        mNotifyBuilder.addAction(android.R.drawable.ic_media_pause ,"Pause", pausePendingIntent);
-        mNotifyBuilder.addAction(android.R.drawable.ic_menu_delete ,"Stop", stopPendingIntent);
-
-        mNotifyManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-    }
-
     public void restoreActionBar() {
         ActionBar actionBar = getActionBar();
         assert actionBar != null;
@@ -428,10 +363,7 @@ public class MainActivity extends ActionBarActivity
 
             getMenuInflater().inflate( R.menu.main, menu );
 
-            MenuItem mediaRouteMenuItem = menu.findItem(R.id.action_cast);
-            MediaRouteActionProvider mediaRouteActionProvider =
-                    (MediaRouteActionProvider) MenuItemCompat.getActionProvider(mediaRouteMenuItem);
-            mediaRouteActionProvider.setRouteSelector(mMediaRouteSelector);
+            mVideoCastManager.addMediaRouterButton(menu, R.id.action_cast);
 
             mShareItem = menu.findItem(R.id.action_share);
             mShareActionProvider = (ShareActionProvider)
@@ -499,58 +431,34 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
-    public void onPlayClicked() {
-        //mAudiourMediaRouteAdapter.play();
-
-        mPlayButton.setVisibility(View.GONE);
-        mPauseButton.setVisibility(View.VISIBLE);
-
-        mMixpanel.track("Clicked Play", new JSONObject());
-    }
-
-    public void onPauseClicked() {
-        //mAudiourMediaRouteAdapter.pause();
-
-        mPauseButton.setVisibility(View.GONE);
-        mPlayButton.setVisibility(View.VISIBLE);
-
-        mMixpanel.track("Clicked Pause", new JSONObject());
-    }
-
-    public void onStopClicked() {
-        //mAudiourMediaRouteAdapter.stop();
-
-        LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
-        layout.setVisibility(View.GONE);
-
-        mShareItem.setVisible(false);
-
-        mMixpanel.track("Clicked Stop", new JSONObject());
-    }
-
     public void onMediaSelected(AudiourMedia selected){
         if (selected == null) return;
-
-        //mAudiourMediaRouteAdapter.setSelectedMedia(selected);
 
         mSelectedMedia = selected;
 
         String url = mSelectedMedia.getUrl();
         String title = mSelectedMedia.getTitle();
 
-        TextView selectedMediaText = (TextView) findViewById(R.id.selected_media);
-        if (selectedMediaText != null) selectedMediaText.setText(title);
+        MediaMetadata selectedMediaMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK);
 
-        if (mPauseButton != null) mPauseButton.setVisibility(View.VISIBLE);
-        if (mPlayButton != null) mPlayButton.setVisibility(View.GONE);
 
-        LinearLayout layout = (LinearLayout) findViewById(R.id.media_control_panel);
-        if (layout != null) layout.setVisibility(View.VISIBLE);
+        selectedMediaMetadata.addImage(new WebImage(Uri.parse("http://audiour.com/favicon.ico")));
+        selectedMediaMetadata.addImage(new WebImage(Uri.parse("http://natejon.es/images/audiour-splash.png")));
+        selectedMediaMetadata.putString(MediaMetadata.KEY_TITLE, title);
+        selectedMediaMetadata.putString(MediaMetadata.KEY_SUBTITLE, url);
 
-        if (mNotifyBuilder != null){
-            mNotifyBuilder.setContentTitle(title);
-            mNotifyBuilder.setContentText(url);
-            mNotifyManager.notify(mNotifyId, mNotifyBuilder.build());
+        MediaInfo selectedMediaInfo = new MediaInfo.Builder(selected.getMp3Url())
+                .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
+                .setContentType("audio/mp3")
+                .setMetadata(selectedMediaMetadata)
+                .build();
+
+        try {
+            mVideoCastManager.loadMedia(selectedMediaInfo, true, 0);
+        } catch (TransientNetworkDisconnectionException e) {
+            e.printStackTrace();
+        } catch (NoConnectionException e) {
+            e.printStackTrace();
         }
 
         JSONObject props = new JSONObject();
@@ -573,21 +481,6 @@ public class MainActivity extends ActionBarActivity
 
         if (mShareItem != null) mShareItem.setVisible(true);
     }
-
-    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            if (PLAY_ACTION.equals(action)) {
-                onPlayClicked();
-            } else if (PAUSE_ACTION.equals(action)) {
-                onPauseClicked();
-            } else if (STOP_ACTION.equals(action)) {
-               onStopClicked();
-            }
-        }
-    };
 
     private class AsyncTaskParams {
         private String mUrl;
@@ -729,20 +622,6 @@ public class MainActivity extends ActionBarActivity
         RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
         AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mediaList);
         task.execute(asyncTaskParams);
-    }
-
-    private class MyMediaRouterCallback extends MediaRouter.Callback {
-
-        @Override
-        public void onRouteSelected(MediaRouter router, MediaRouter.RouteInfo info) {
-            mSelectedDevice = CastDevice.getFromBundle(info.getExtras());
-            String routeId = info.getId();
-        }
-
-        @Override
-        public void onRouteUnselected(MediaRouter router, MediaRouter.RouteInfo info) {
-            mSelectedDevice = null;
-        }
     }
 
 }

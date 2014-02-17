@@ -7,78 +7,27 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.nathanrjones.audiour.SlidingUpPanelLayout
-        android:id="@+id/sliding_layout"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#222">
+        android:orientation="vertical" >
 
-        <LinearLayout
+        <FrameLayout
+            android:id="@+id/container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical" >
+            android:layout_height="match_parent" >
+        </FrameLayout>
 
-            <FrameLayout
-                android:id="@+id/container"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-            </FrameLayout>
-
-        </LinearLayout>
-
-
-        <LinearLayout
-            android:id="@+id/media_control_panel"
-            android:visibility="gone"
-            android:padding="8dp"
-            android:layout_width="match_parent"
+        <com.google.sample.castcompanionlibrary.widgets.MiniController
+            android:id="@+id/miniController"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:clickable="true">
+            android:layout_alignParentBottom="true"
+            android:background="#e5e5e5"
+            android:visibility="visible">
+        </com.google.sample.castcompanionlibrary.widgets.MiniController>
 
-            <TextView
-                android:id="@+id/selected_media"
-                android:text="Select a Track"
-                android:textColor="#FFF"
-                android:gravity="left|center_vertical"
-                android:layout_gravity="center_vertical"
-                android:layout_height="52dp"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:textSize="20sp"
-                android:fontFamily="sans-serif-light"/>
-
-            <ImageButton
-                android:id="@+id/play_button"
-                android:src="@android:drawable/ic_media_play"
-                android:visibility="gone"
-                android:background="@null"
-                android:padding="8dp"
-                android:layout_gravity="center_vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <ImageButton
-                android:id="@+id/pause_button"
-                android:src="@android:drawable/ic_media_pause"
-                android:visibility="gone"
-                android:background="@null"
-                android:padding="8dp"
-                android:layout_gravity="center_vertical"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <ImageButton
-                android:id="@+id/stop_button"
-                android:src="@android:drawable/ic_menu_delete"
-                android:visibility="gone"
-                android:background="@null"
-                android:padding="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-        </LinearLayout>
-    </com.nathanrjones.audiour.SlidingUpPanelLayout>
+    </RelativeLayout>
 
     <fragment android:id="@+id/navigation_drawer"
         android:layout_width="@dimen/navigation_drawer_width"

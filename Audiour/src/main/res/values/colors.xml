@@ -2,4 +2,6 @@
     <color name="orange">#ffe9913c</color>
     <color name="gray">#605f59</color>
     <color name="black">#000</color>
+
+    <color name="pressed_democast">#CC33B5E5</color>
 </resources>

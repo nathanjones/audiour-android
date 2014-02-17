@@ -4,7 +4,7 @@
         android:id="@+id/action_cast"
         android:title="@string/action_cast"
         app:actionProviderClass="android.support.v7.app.MediaRouteActionProvider"
-        android:showAsAction="always"/>
+        app:showAsAction="always"/>
 
     <item android:id="@+id/action_share"
         android:showAsAction="ifRoom"
