@@ -6,7 +6,7 @@
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="orange_transparent">#AAFADCA7</color>
-    <color name="orange">#FADCA7</color>
+    <color name="orange">#ffe9913c</color>
     <color name="casting_media_control_bg">#2c393d</color>
 
     <!-- Custom Media Router Dialog -->

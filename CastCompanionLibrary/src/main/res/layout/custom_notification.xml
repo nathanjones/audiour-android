@@ -5,8 +5,8 @@
 
     <ImageView
         android:id="@+id/iconView"
-        android:layout_width="68dp"
-        android:layout_height="68dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:adjustViewBounds="false"

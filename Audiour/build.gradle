@@ -28,6 +28,7 @@ dependencies {
     compile 'com.android.support:appcompat-v7:+'
     compile 'com.android.support:mediarouter-v7:18.0.+'
     compile 'com.google.android.gms:play-services:4.2.42'
+    compile 'com.koushikdutta.ion:ion:1.2.1'
     compile files('libs/GoogleAnalyticsServices.jar')
     compile files('libs/MixpanelAPI.jar')
     compile project(':CastCompanionLibrary')

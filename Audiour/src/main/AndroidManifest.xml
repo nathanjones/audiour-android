@@ -54,11 +54,23 @@
         </activity>
 
         <activity
+            android:name="com.nathanrjones.audiour.mediaplayer.LocalPlayerActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize|screenLayout|uiMode"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:theme="@style/Audiour.Overlay">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name="com.google.sample.castcompanionlibrary.cast.player.VideoCastControllerActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:parentActivityName="com.nathanrjones.audiour.MainActivity"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait"
+            android:theme="@style/Audiour.Overlay">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nathanrjones.audiour.MainActivity" />

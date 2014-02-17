@@ -23,8 +23,8 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:background="#e5e5e5"
-            android:visibility="visible">
+            android:background="@drawable/shadow7"
+            android:visibility="gone">
         </com.google.sample.castcompanionlibrary.widgets.MiniController>
 
     </RelativeLayout>

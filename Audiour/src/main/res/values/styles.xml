@@ -20,4 +20,10 @@
     <style name="Audiour.PtrHeader" parent="android:Widget">
         <item name="ptrProgressBarColor">@color/orange</item>
     </style>
+
+    <style name="Audiour.Overlay" parent="@style/Audiour">
+        <item name="android:windowActionBarOverlay">true</item>
+        <item name="windowActionBarOverlay">true</item>
+        <item name="android:actionBarStyle">@style/Audiour.ActionBar</item>
+    </style>
 </resources>
