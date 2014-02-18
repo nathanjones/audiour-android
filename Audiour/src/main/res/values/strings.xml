@@ -6,12 +6,17 @@
     <string name="app_store_url">https://play.google.com/store/apps/details?id=com.nathanrjones.audiour</string>
     <string name="default_app_name">F6ADC45B</string>
 
+    <!-- API -->
+    <string name="production_api_url">http://api.audiour.com</string>
+    <string name="staging_api_url">http://apistaging.audiour.com</string>
+
 
     <!-- Titles -->
     <string name="title_featured">Featured</string>
     <string name="title_trending">Trending</string>
     <string name="title_random">Browse Random</string>
     <string name="title_recents">Recent Uploads</string>
+    <string name="title_starred">Starred</string>
     <string name="title_settings">Settings</string>
 
     <!-- Navigation Drawer -->

@@ -102,7 +102,8 @@ public class NavigationDrawerFragment extends Fragment {
                         getString(R.string.title_featured),
                         getString(R.string.title_trending),
                         getString(R.string.title_random),
-                        getString(R.string.title_recents)
+                        getString(R.string.title_recents),
+                        getString(R.string.title_starred)
                 }));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;

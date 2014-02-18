@@ -6,28 +6,6 @@
     android:layout_height="match_parent">
 
     <PreferenceCategory
-        android:title="Chromecast Setup"
-        android:key="chromecast_category">
-
-        <EditTextPreference
-            android:key="pref_app_name"
-            android:title="@string/pref_app_name"
-            android:summary="@string/pref_app_name_summary"
-            android:defaultValue="@string/default_app_name" />
-
-        <PreferenceScreen
-            android:title="@string/pref_receiver_setup"
-            android:summary="@string/pref_receiver_setup_summary">
-
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="@string/pref_receiver_setup_url" />
-
-        </PreferenceScreen>
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
         android:summary="@string/prefs_header_application_summary"
         android:title="@string/prefs_header_application" >
         <ListPreference
@@ -45,15 +23,6 @@
             android:key="volume_target"
             android:summary="@string/prefs_volume_title_summary"
             android:title="@string/prefs_volume_title" />
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/about_app" >
-        <EditTextPreference
-            android:enabled="false"
-            android:key="app_version"
-            android:persistent="false"
-            android:selectable="false"
-            android:shouldDisableView="false"
-            android:title="@string/version" />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -6,6 +6,7 @@ import android.app.FragmentManager;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
@@ -13,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -24,16 +26,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.ShareActionProvider;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.android.gms.cast.MediaInfo;
 import com.google.android.gms.cast.MediaMetadata;
 import com.google.android.gms.common.images.WebImage;
+import com.google.gson.reflect.TypeToken;
 import com.google.sample.castcompanionlibrary.cast.BaseCastManager;
 import com.google.sample.castcompanionlibrary.cast.VideoCastManager;
 import com.google.sample.castcompanionlibrary.cast.callbacks.IVideoCastConsumer;
@@ -41,6 +47,8 @@ import com.google.sample.castcompanionlibrary.cast.callbacks.VideoCastConsumerIm
 import com.google.sample.castcompanionlibrary.cast.exceptions.NoConnectionException;
 import com.google.sample.castcompanionlibrary.cast.exceptions.TransientNetworkDisconnectionException;
 import com.google.sample.castcompanionlibrary.widgets.MiniController;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
 import com.nathanrjones.audiour.settings.CastPreference;
 
@@ -49,14 +57,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import uk.co.senab.actionbarpulltorefresh.library.PullToRefreshLayout;
 
 import static android.app.ActionBar.NAVIGATION_MODE_STANDARD;
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, AudiourMediaArrayAdapter.Callback {
+
+    private static final String PREF_STARRED_ITEMS = "STARRED_ITEMS";
 
     private static final String TAG = "MainActivity";
     private NavigationDrawerFragment mNavigationDrawerFragment;
@@ -65,7 +77,6 @@ public class MainActivity extends ActionBarActivity
     private VideoCastManager mVideoCastManager;
     private IVideoCastConsumer mCastConsumer;
     private MiniController mMini;
-    private MenuItem mediaRouteMenuItem;
 
     private MenuItem mShareItem;
     private ShareActionProvider mShareActionProvider;
@@ -78,18 +89,16 @@ public class MainActivity extends ActionBarActivity
     private static final int POSITION_TRENDING = 1;
     private static final int POSITION_RANDOM = 2;
     private static final int POSITION_RECENTS = 3;
-
-    // JSON Node names
-    private static final String TAG_ID = "AudioFileId";
-    private static final String TAG_TITLE = "Title";
-    private static final String TAG_URL = "Url";
-    private static final String TAG_MP3_URL = "Mp3Url";
+    private static final int POSITION_STARRED = 4;
 
     private List<AudiourMedia> mCurrentList;
     private List<AudiourMedia> mFeaturedList = new ArrayList<AudiourMedia>();
     private List<AudiourMedia> mPopularList = new ArrayList<AudiourMedia>();
     private List<AudiourMedia> mRandomList = new ArrayList<AudiourMedia>();
     private List<AudiourMedia> mRecentList = new ArrayList<AudiourMedia>();
+    private List<AudiourMedia> mStarredList = new ArrayList<AudiourMedia>();
+
+    private Set<String> mStarredItems = new HashSet<String>();
 
     private static final String URL_BASE = "http://api.audiour.com";
     private static final String URL_FEATURED = URL_BASE + "/Featured";
@@ -97,15 +106,10 @@ public class MainActivity extends ActionBarActivity
     private static final String URL_RANDOM = URL_BASE + "/Random";
     private static final String URL_RECENT = URL_BASE + "/Recent";
 
-    public static final String PLAY_ACTION = "com.nathanrjones.audiour.playbackcommand.play";
-    public static final String PAUSE_ACTION = "com.nathanrjones.audiour.playbackcommand.pause";
-    public static final String STOP_ACTION = "com.nathanrjones.audiour.playbackcommand.stop";
+    SharedPreferences mPreferences;
+    SharedPreferences.Editor mPreferencesEditor;
 
     AudiourMedia mSelectedMedia;
-
-    private int mNotifyId;
-    private NotificationManager mNotifyManager;
-    private NotificationCompat.Builder mNotifyBuilder;
 
     private MixpanelAPI mMixpanel;
 
@@ -123,6 +127,8 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         mVideoCastManager = AudiourApplication.getCastManager(this);
 
@@ -157,15 +163,6 @@ public class MainActivity extends ActionBarActivity
                     CastPreference.setFtuShown(MainActivity.this);
 
                     Log.d(TAG, "Route is visible: " + info);
-                    new Handler().postDelayed(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            if (mediaRouteMenuItem != null && mediaRouteMenuItem.isVisible()) {
-                                Log.d(TAG, "Cast Icon is visible: " + info.getName());
-                            }
-                        }
-                    }, 1000);
                 }
             }
         };
@@ -218,7 +215,7 @@ public class MainActivity extends ActionBarActivity
             if (segments == null) return;
             if (segments.isEmpty()) return;
 
-            String id = segments.get(0);
+            String id = segments.get(0).toLowerCase();
 
             if (id.equals("popular")) {
                 onNavigationDrawerItemSelected(POSITION_TRENDING);
@@ -226,13 +223,22 @@ public class MainActivity extends ActionBarActivity
                 onNavigationDrawerItemSelected(POSITION_RANDOM);
             } else if (id.equals("recent")) {
                 onNavigationDrawerItemSelected(POSITION_RECENTS);
+            } else if (id.equals("starred")) {
+                onNavigationDrawerItemSelected(POSITION_STARRED);
             } else {
-                RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
-                task.execute(URL_BASE + "/" + id);
+
+                String baseUrl = getString(R.string.production_api_url);
+
+                Ion.with(MainActivity.this, baseUrl + "/" + id)
+                        .as(new TypeToken<AudiourMedia>() {})
+                        .setCallback(new FutureCallback<AudiourMedia>() {
+                            @Override
+                            public void onCompleted(Exception e, AudiourMedia selectedMedia) {
+                                if (selectedMedia != null) onMediaSelected(selectedMedia);
+                            }
+                        });
             }
         }
-
-        EasyTracker.getInstance(this).activityStart(this);
 
     }
 
@@ -276,10 +282,16 @@ public class MainActivity extends ActionBarActivity
             case POSITION_RECENTS:
                 mTitle = getString(R.string.title_recents);
                 break;
+            case POSITION_STARRED:
+                mTitle = getString(R.string.title_starred);
+                break;
         }
     }
 
     public void onSectionStarted(int number){
+
+        mStarredItems = new HashSet<String>(mPreferences.getStringSet(PREF_STARRED_ITEMS, new HashSet<String>()));
+
         mCurrentPosition = number;
 
         final List<AudiourMedia> mediaList;
@@ -301,6 +313,11 @@ public class MainActivity extends ActionBarActivity
                 mediaList = mRecentList;
                 mMixpanel.track("Viewed Recents List", new JSONObject());
                 break;
+            case POSITION_STARRED:
+                mStarredList = new ArrayList<AudiourMedia>();
+                mediaList = mStarredList;
+                mMixpanel.track("Viewed Starred List", new JSONObject());
+                break;
             default:
                 mediaList = new ArrayList<AudiourMedia>();
                 break;
@@ -311,11 +328,12 @@ public class MainActivity extends ActionBarActivity
         if (mediaList.size() == 0) {
             populateAudiourMediaList(number, mediaList);
         } else {
-            ListAdapter listAdapter = new AudiourMediaArrayAdapter(
+            AudiourMediaArrayAdapter listAdapter = new AudiourMediaArrayAdapter(
                     MainActivity.this,
                     R.layout.card_list_item,
                     mediaList
             );
+            listAdapter.setCallback(this);
 
             ListView listView = (ListView) findViewById(android.R.id.list);
 
@@ -348,7 +366,7 @@ public class MainActivity extends ActionBarActivity
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
 
-        Drawable colorDrawable = new ColorDrawable(getResources().getColor(R.color.gray));
+        Drawable colorDrawable = new ColorDrawable(getResources().getColor(R.color.dark_gray));
         Drawable bottomDrawable = getResources().getDrawable(R.drawable.actionbar_bottom);
         LayerDrawable layer = new LayerDrawable(new Drawable[] { colorDrawable, bottomDrawable });
 
@@ -410,8 +428,17 @@ public class MainActivity extends ActionBarActivity
                 String value = input.getText() != null ? input.getText().toString() : "";
 
                 if (!value.isEmpty()){
-                    RetrieveAudiourMetadataTask task = new RetrieveAudiourMetadataTask();
-                    task.execute(URL_BASE + "/" + value);
+
+                    String baseUrl = getString(R.string.production_api_url);
+
+                    Ion.with(MainActivity.this, baseUrl + "/" + value)
+                            .as(new TypeToken<AudiourMedia>() {})
+                            .setCallback(new FutureCallback<AudiourMedia>() {
+                                @Override
+                                public void onCompleted(Exception e, AudiourMedia selectedMedia) {
+                                    if (selectedMedia != null) onMediaSelected(selectedMedia);
+                                }
+                            });
                 }
             }
         });
@@ -436,18 +463,17 @@ public class MainActivity extends ActionBarActivity
 
         mSelectedMedia = selected;
 
-        String url = mSelectedMedia.getUrl();
-        String title = mSelectedMedia.getTitle();
+        String url = mSelectedMedia.Url;
+        String title = mSelectedMedia.Title;
 
         MediaMetadata selectedMediaMetadata = new MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK);
-
 
         selectedMediaMetadata.addImage(new WebImage(Uri.parse("http://audiour.com/favicon.ico")));
         selectedMediaMetadata.addImage(new WebImage(Uri.parse("http://natejon.es/images/audiour-splash.png")));
         selectedMediaMetadata.putString(MediaMetadata.KEY_TITLE, title);
         selectedMediaMetadata.putString(MediaMetadata.KEY_SUBTITLE, url);
 
-        MediaInfo selectedMediaInfo = new MediaInfo.Builder(selected.getMp3Url())
+        MediaInfo selectedMediaInfo = new MediaInfo.Builder(selected.Mp3Url)
                 .setStreamType(MediaInfo.STREAM_TYPE_BUFFERED)
                 .setContentType("audio/mp3")
                 .setMetadata(selectedMediaMetadata)
@@ -473,8 +499,8 @@ public class MainActivity extends ActionBarActivity
 
         Intent shareIntent = ShareCompat.IntentBuilder.from(this)
                 .setType("text/plain")
-                .setSubject(selected.getTitle())
-                .setText(selected.getUrl())
+                .setSubject(selected.Title)
+                .setText(selected.Url)
                 .getIntent();
 
         setShareIntent(shareIntent);
@@ -482,122 +508,52 @@ public class MainActivity extends ActionBarActivity
         if (mShareItem != null) mShareItem.setVisible(true);
     }
 
-    private class AsyncTaskParams {
-        private String mUrl;
-        private List<AudiourMedia> mAudiourMediaList;
+    private void populateAudiourMediaList(int currentPosition, List<AudiourMedia> mediaList){
 
-        public AsyncTaskParams(String url, List<AudiourMedia> audiourMediaList){
-            mUrl = url;
-            mAudiourMediaList = audiourMediaList;
-        }
+        if (currentPosition == POSITION_STARRED){
 
-        public String getUrl(){
-            return mUrl;
-        }
+            mStarredList = new ArrayList<AudiourMedia>();
 
-        public List<AudiourMedia> getList(){
-            return mAudiourMediaList;
-        }
-    }
+            ListView listView = (ListView) findViewById(android.R.id.list);
 
-    private class RetrieveAudiourMetadataTask extends AsyncTask<String, Void, JSONObject> {
+            if (listView == null) return;
 
-        private String mUrl;
+            final AudiourMediaArrayAdapter listAdapter = new AudiourMediaArrayAdapter(
+                    MainActivity.this,
+                    R.layout.card_list_item,
+                    mStarredList
+            );
+            listAdapter.setCallback(this);
 
-        protected JSONObject doInBackground(String... params) {
-            mUrl = params[0];
+            listView.setAdapter(listAdapter);
 
-            JSONParser parser = new JSONParser();
-            return parser.getObject(mUrl);
-        }
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    onMediaSelected(mStarredList.get(position));
+                }
+            });
 
-        protected void onPostExecute(JSONObject result) {
+            for (String clypId: mStarredItems){
 
-            try {
+                Ion.with(MainActivity.this, URL_BASE + "/" + clypId)
+                        .as(new TypeToken<AudiourMedia>(){})
+                        .setCallback(new FutureCallback<AudiourMedia>() {
 
-                String id = result.getString(TAG_ID);
-                String title = result.getString(TAG_TITLE);
-                String url = result.getString(TAG_URL);
-                String mp3Url = result.getString(TAG_MP3_URL);
-
-                onMediaSelected(new AudiourMedia(id, title, url, mp3Url));
-
-            } catch (JSONException e) {
-                e.printStackTrace();
+                            @Override
+                            public void onCompleted(Exception e, AudiourMedia item) {
+                                if (item != null) mStarredList.add(item);
+                                listAdapter.notifyDataSetChanged();
+                            }
+                        });
             }
-
-            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
-
-        }
-
-    }
-
-    private class RetrieveAudiourFilesTask extends AsyncTask<AsyncTaskParams, Void, JSONArray> {
-
-        private String mUrl;
-        private List<AudiourMedia> mAudiourMediaList;
-
-        protected JSONArray doInBackground(AsyncTaskParams... params) {
-            mUrl = params[0].getUrl();
-            mAudiourMediaList = params[0].getList();
-
-            JSONParser parser = new JSONParser();
-            return parser.getArray(mUrl);
-        }
-
-        protected void onPostExecute(JSONArray results) {
-
-            if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
 
             if (mPullToRefreshLayout != null && mPullToRefreshLayout.isRefreshing()){
                 mPullToRefreshLayout.setRefreshComplete();
             }
 
-            if (results == null) {
-                Toast.makeText(MainActivity.this, "Could not load files", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            try {
-                for(int i=0;i<results.length();i++)
-                {
-                    JSONObject file = results.getJSONObject(i);// Used JSON Object from Android
-
-                    //Storing each Json in a string variable
-                    String id = file.getString(TAG_ID);
-                    String title = file.getString(TAG_TITLE);
-                    String url = file.getString(TAG_URL);
-                    String mp3Url = file.getString(TAG_MP3_URL);
-
-                    mAudiourMediaList.add(new AudiourMedia(id, title, url, mp3Url));
-                }
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            final ListView listView = (ListView) findViewById(android.R.id.list);
-
-            final ListAdapter listAdapter = new AudiourMediaArrayAdapter(
-                    MainActivity.this,
-                    R.layout.card_list_item,
-                    mAudiourMediaList
-            );
-
-            if (listView != null){
-                listView.setAdapter(listAdapter);
-
-                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        onMediaSelected(mAudiourMediaList.get(position));
-                    }
-                });
-            }
+            return;
         }
-    }
-
-    private void populateAudiourMediaList(int currentPosition, List<AudiourMedia> mediaList){
 
         String url = "";
 
@@ -619,9 +575,57 @@ public class MainActivity extends ActionBarActivity
         mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
         if (mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
 
-        RetrieveAudiourFilesTask task = new RetrieveAudiourFilesTask();
-        AsyncTaskParams asyncTaskParams = new AsyncTaskParams(url, mediaList);
-        task.execute(asyncTaskParams);
+        Ion.with(MainActivity.this, url)
+                .as(new TypeToken<List<AudiourMedia>>() {})
+                .setCallback(new FutureCallback<List<AudiourMedia>>() {
+
+                    @Override
+                    public void onCompleted(Exception e, List<AudiourMedia> list) {
+
+                        mProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+                        if (mProgressBar != null) mProgressBar.setVisibility(View.GONE);
+
+                        if (mPullToRefreshLayout != null && mPullToRefreshLayout.isRefreshing()){
+                            mPullToRefreshLayout.setRefreshComplete();
+                         }
+
+                        if (list == null) return;
+
+                        final List<AudiourMedia> audiourList = list;
+                        final ListView listView = (ListView) findViewById(android.R.id.list);
+                        final AudiourMediaArrayAdapter listAdapter = new AudiourMediaArrayAdapter(
+                                MainActivity.this,
+                                R.layout.card_list_item,
+                                audiourList
+                        );
+
+                        if (listView != null) {
+                            listView.setAdapter(listAdapter);
+                            listAdapter.setCallback(MainActivity.this);
+
+                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                    onMediaSelected(audiourList.get(position));
+                                }
+                            });
+                        }
+                    }
+                });
     }
 
+    @Override
+    public void itemStarred(AudiourMedia item) {
+        if (mStarredItems == null) mStarredItems = new HashSet<String>();
+
+        if (item.Starred){
+            mStarredItems.add(item.AudioFileId);
+        } else {
+            mStarredItems.remove(item.AudioFileId);
+        }
+
+        mPreferencesEditor = mPreferences.edit();
+        mPreferencesEditor.putStringSet(PREF_STARRED_ITEMS, mStarredItems);
+        mPreferencesEditor.commit();
+    }
 }

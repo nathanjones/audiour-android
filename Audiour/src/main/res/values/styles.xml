@@ -9,12 +9,12 @@
 
     <!-- ActionBar styles -->
     <style name="Audiour.ActionBar" parent="android:Widget.Holo.Light.ActionBar.Solid.Inverse">
-        <item name="android:background">#605f59</item>
+        <item name="android:background">@color/dark_gray</item>
     </style>
 
     <style name="Audiour.Dialog" parent="android:Theme.Holo.Dialog">
         <item name="android:textColor">#FFF</item>
-        <item name="android:background">@color/gray</item>
+        <item name="android:background">@color/dark_gray</item>
     </style>
 
     <style name="Audiour.PtrHeader" parent="android:Widget">
