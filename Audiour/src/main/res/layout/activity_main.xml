@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical" >
@@ -15,19 +15,19 @@
         <FrameLayout
             android:id="@+id/container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" >
+            android:layout_height="0dp"
+            android:layout_weight="1">
         </FrameLayout>
 
         <com.google.sample.castcompanionlibrary.widgets.MiniController
             android:id="@+id/miniController"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
             android:background="@drawable/shadow7"
             android:visibility="gone">
         </com.google.sample.castcompanionlibrary.widgets.MiniController>
 
-    </RelativeLayout>
+    </LinearLayout>
 
     <fragment android:id="@+id/navigation_drawer"
         android:layout_width="@dimen/navigation_drawer_width"
