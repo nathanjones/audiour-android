@@ -117,6 +117,20 @@ public class MainActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        Boolean promptShown = mPreferences.getBoolean("UPGRADE_PROMPT_SHOWN", false);
+
+        if (!promptShown) {
+            mPreferencesEditor = mPreferences.edit();
+            mPreferencesEditor.putBoolean("UPGRADE_PROMPT_SHOWN", true);
+            mPreferencesEditor.commit();
+
+            Intent intent = new Intent();
+            intent.setClass(MainActivity.this, SplashActivity.class);
+            startActivityForResult(intent, 0);
+        }
+
         BaseCastManager.checkGooglePlaySevices(this);
 
         setContentView(R.layout.activity_main);
@@ -128,7 +142,7 @@ public class MainActivity extends ActionBarActivity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
 
         mVideoCastManager = AudiourApplication.getCastManager(this);
 

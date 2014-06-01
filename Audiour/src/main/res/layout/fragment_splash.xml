@@ -1,0 +1,68 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.nathanrjones.audiour.SplashActivity$PlaceholderFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="32dp"
+    android:background="#FFF5F4EE"
+    android:textAlignment="center">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:src="@drawable/clyp_logo_orange"
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:layout_marginBottom="12dp"
+        android:layout_centerHorizontal="true"
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
+
+    <TextView
+        android:text="New Name. New App."
+        android:id="@+id/title"
+        android:layout_below="@+id/logo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="sans-serif"
+        android:textSize="28sp"
+        android:textColor="@color/dark_gray"
+        android:gravity="center"
+        android:layout_centerInParent="true"/>
+
+    <TextView
+        android:id="@+id/subtitle"
+        android:text="@string/upgrade_prompt_description"
+        android:layout_below="@+id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="18dp"
+        android:fontFamily="sans-serif"
+        android:textSize="18sp"
+        android:textColor="@color/dark_gray"
+        android:gravity="center"
+        android:layout_centerInParent="true"/>
+
+    <Button
+        android:id="@+id/downloadButton"
+        android:layout_below="@id/subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="12dp"
+        android:text="DOWNLOAD"/>
+
+    <TextView
+        android:visibility="gone"
+        android:id="@+id/noThanksLink"
+        android:text="Continue to Audiour."
+        android:layout_below="@+id/downloadButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:textSize="18sp"
+        android:textColor="@color/dark_gray"
+        android:gravity="center"
+        android:layout_centerInParent="true"/>
+
+</RelativeLayout>
